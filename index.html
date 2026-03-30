@@ -238,7 +238,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <h2>은행 선택</h2>
     <div class="sub" id="mfname"></div>
     <div id="step-bank">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:12px">거래내역을 다운로드한 은행을 선택하세요.</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px">거래내역을 다운로드한 은행 또는 서비스를 선택하세요.</div>
+      <div id="granter-info" style="display:none;background:rgba(201,122,244,.1);border:1px solid rgba(201,122,244,.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#c97af4;line-height:1.7">
+        <strong>그랜터 파일 특징</strong><br>
+        · 금액 양수 → 입금 / 음수 → 출금 자동 분류<br>
+        · 계정과목 컬럼 → 자동 import<br>
+        · 거래수단 컬럼 → 계좌별 자동 분류 (한 파일에 여러 계좌 OK)
+      </div>
       <div class="bpicker" id="bpicker"></div>
       <div class="fr" style="margin-bottom:0">
         <label>목록에 없으면 직접 입력</label>
@@ -363,9 +369,13 @@ const BP={
   nonghyup:{label:'농협은행',icon:'🟢',desc:'NH농협은행',date:/거래일|날짜|일자/i,in:/입금/i,out:/출금/i,name:/적요|거래처|내역/i,memo:/메모|비고/i,balance:/잔액/i},
   kakao:{label:'카카오뱅크',icon:'🟡',desc:'카카오뱅크',date:/날짜|거래일|일시/i,in:/입금|받은금액/i,out:/출금|보낸금액|사용금액/i,name:/거래처|내용|상대방/i,memo:/메모|비고/i,balance:/잔액/i},
   toss:{label:'토스뱅크',icon:'🔵',desc:'토스뱅크',date:/날짜|거래일|일시/i,in:/입금|받은금액/i,out:/출금|보낸금액|사용금액/i,name:/상대방|내용|거래처|적요/i,memo:/메모|비고/i,balance:/잔액/i},
+  granter:{label:'그랜터',icon:'🟣',desc:'Granter 경비관리',isGranter:true,
+    date:/^일시$/i,amount:/^금액$/i,name:/^사용처$/i,memo:/^사유$/i,
+    cat_col:/^계정과목$/i,bank_col:/^거래수단$/i,name2:/보낸분|받는분/i,
+    balance:/거래후잔액/i,in:null,out:null},
   custom:{label:'직접 입력',icon:'⚙️',desc:'기타 은행',date:null,in:null,out:null,name:null,memo:null,balance:null}
 };
-const CR=[{key:'date',label:'날짜 *'},{key:'in',label:'입금액'},{key:'out',label:'출금액'},{key:'amount',label:'금액(합산)'},{key:'name',label:'거래처/적요'},{key:'memo',label:'주요내용/비고'},{key:'balance',label:'잔액'}];
+const CR=[{key:'date',label:'날짜 *'},{key:'in',label:'입금액'},{key:'out',label:'출금액'},{key:'amount',label:'금액(합산)'},{key:'name',label:'거래처/적요'},{key:'memo',label:'주요내용/비고'},{key:'balance',label:'잔액'},{key:'cat_col',label:'계정과목(직접)'},{key:'bank_col',label:'계좌(행별)'}];
 
 const SK='jajagm6-txs',AK='jajagm6-accts';
 let TXS=JSON.parse(localStorage.getItem(SK)||'[]');
@@ -381,6 +391,29 @@ function fmt(n){return Math.abs(Number(n)).toLocaleString('ko-KR')+'원';}
 function today(){return new Date().toISOString().slice(0,10);}
 function ym(){return today().slice(0,7);}
 function ga(k){return ACCTS.find(a=>a.key===k);}
+
+// ── 그랜터 계정과목 → 분류 자동 매핑 ───────────────────────────
+const GCLS={'상품매출':'수익','제품매출':'수익','용역매출':'수익','이자수익':'수익','배당금수익':'수익','외상매출금':'자산','받을어음':'자산','보통예금':'자산','현금':'자산','미착품':'자산','재고자산':'자산','선급금':'자산','단기차입금':'부채','단기차입금(대출금상환)':'부채','장기차입금':'부채','외상매입금':'부채','미지급금':'부채','신용카드대금':'부채','임대보증금':'부채','자본금':'자본','이익잉여금':'자본','단순이체':'자산'};
+function gCls(cat){
+  if(!cat)return'';
+  if(GCLS[cat])return GCLS[cat];
+  if(/매출|수입|수익|이자수익/.test(cat))return'수익';
+  if(/차입금|대출|상환|미지급|부채|신용카드|어음/.test(cat))return'부채';
+  if(/자산|예금|현금|재고|선급|미수/.test(cat))return'자산';
+  if(/자본|출자|잉여/.test(cat))return'자본';
+  return'비용'; // 기본값
+}
+// 그랜터 계정과목을 ACCTS에 자동 등록
+function ensureGranterCat(catName, type){
+  if(!catName||catName==='단순이체')return{key:catName,cls:gCls(catName)};
+  let a=ga(catName);
+  if(!a){
+    const cls=gCls(catName);
+    a={key:catName,cls,type:'',kw:catName,desc:'그랜터 자동 등록'};
+    ACCTS.push(a);saveA();
+  }
+  return a;
+}
 
 // ── 자동 계정과목 매핑 ──────────────────────────────────────────
 function autoMatch(tx){
@@ -543,7 +576,13 @@ function openBM(){
   document.getElementById('bankModal').classList.add('open');
 }
 function closeBM(){document.getElementById('bankModal').classList.remove('open');nextFile();}
-function selB(k){sBK=k;document.querySelectorAll('.bopt').forEach(e=>e.classList.remove('selected'));document.getElementById('bopt-'+k)?.classList.add('selected');document.getElementById('cbn').value='';}
+function selB(k){
+  sBK=k;
+  document.querySelectorAll('.bopt').forEach(e=>e.classList.remove('selected'));
+  document.getElementById('bopt-'+k)?.classList.add('selected');
+  document.getElementById('cbn').value='';
+  document.getElementById('granter-info').style.display=k==='granter'?'block':'none';
+}
 function goMap(){
   const cn=document.getElementById('cbn').value.trim();
   if(!sBK&&!cn){alert('은행을 선택하거나 입력해주세요');return;}
@@ -553,8 +592,10 @@ function goMap(){
 function backB(){document.getElementById('step-bank').style.display='block';document.getElementById('step-map').style.display='none';}
 function buildMap(){
   const p=BP[sBK]||BP.custom;dMap={};
-  const fb={date:/날짜|일자|일시|date/i,in:/입금/i,out:/출금/i,amount:/^금액$|^거래금액$/i,name:/거래처|적요|내용|내역|상대방/i,memo:/비고|메모|상세/i,balance:/잔액|잔고/i};
+  const fb={date:/날짜|일자|일시|date/i,in:/입금/i,out:/출금/i,amount:/^금액$|^거래금액$/i,name:/거래처|적요|내용|내역|상대방|사용처/i,memo:/비고|메모|상세|사유/i,balance:/잔액|잔고/i,cat_col:/^계정과목$/i,bank_col:/^거래수단$/i};
   CR.forEach(r=>{const pt=p[r.key]||fb[r.key];if(!pt)return;const i=pHdrs.findIndex(h=>pt.test(h));if(i!==-1)dMap[r.key]=i;});
+  // 그랜터: name2(보낸분/받는분) fallback
+  if(p.name2&&dMap.name===undefined){const i=pHdrs.findIndex(h=>p.name2.test(h));if(i!==-1)dMap.name=i;}
   renderCP();
 }
 function renderCP(){
@@ -571,24 +612,42 @@ function renderCP(){
 function updM(k,v){if(v==='')delete dMap[k];else dMap[k]=parseInt(v);}
 function applyMap(){
   const cn=document.getElementById('cbn').value.trim();
+  const isGranter=sBK==='granter';
   const bname=cn||(BP[sBK]?.label||'기타');
   const dc=dMap.date,ic=dMap.in??null,oc=dMap.out??null,ac=dMap.amount??null,nc=dMap.name??null,mc=dMap.memo??null;
+  const catCol=dMap.cat_col??null; // 그랜터: 계정과목 컬럼
+  const bankCol=dMap.bank_col??null; // 그랜터: 거래수단 컬럼(행별)
   if(dc===undefined){alert('날짜 컬럼 선택해주세요');return;}
   if(ic===null&&oc===null&&ac===null){alert('입금액 또는 출금액 컬럼 선택해주세요');return;}
   let added=0;
   pRows.forEach(row=>{
     const rd=row[dc];let ds='';
     if(rd instanceof Date)ds=rd.toISOString().slice(0,10);
-    else{const s=String(rd).trim().replace(/\./g,'-').replace(/\//g,'-').replace(/\s.*$/,'');const m=s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)ds=`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;else return;}
+    else{
+      // ISO 형식(그랜터): 2026-03-30T14:24:11 → 날짜만 추출
+      const s=String(rd).trim().replace(/T.*/,'').replace(/\./g,'-').replace(/\//g,'-').replace(/\s.*/,'');
+      const m=s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if(m)ds=`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;else return;
+    }
     const pa=v=>{if(v===null||v===undefined||v==='')return 0;return parseFloat(String(v).replace(/[^0-9.-]/g,''))||0;};
     let ia=ic!==null?pa(row[ic]):0,oa=oc!==null?pa(row[oc]):0;
     if(ac!==null&&ia===0&&oa===0){const a=pa(row[ac]);if(a>0)ia=a;else if(a<0)oa=-a;}
     if(ia===0&&oa===0)return;
     const name=nc!==null?String(row[nc]??'').trim():'';
     const memo=mc!==null?String(row[mc]??'').trim():'';
+    // 그랜터: 행별 계좌명 사용
+    const rowBank=bankCol!==null?String(row[bankCol]??'').trim()||bname:bname;
+    // 그랜터: 계정과목 직접 import
+    const granterCatRaw=catCol!==null?String(row[catCol]??'').trim():'';
     const mk=(type,amount)=>{
-      const t={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5)+added,date:ds,type,bank:bname,name:name||(type==='in'?'입금':'출금'),cat:'',cls:'',amount,memo};
-      const m=autoMatch(t);if(m){t.cat=m.key;t.cls=m.cls;}
+      const t={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5)+added,date:ds,type,bank:rowBank,name:name||(type==='in'?'입금':'출금'),cat:'',cls:'',amount,memo};
+      if(granterCatRaw){
+        // 그랜터 계정과목 직접 사용 + 분류 자동 매핑
+        const acct=ensureGranterCat(granterCatRaw,type);
+        t.cat=acct.key;t.cls=acct.cls||gCls(granterCatRaw);
+      }else{
+        const m=autoMatch(t);if(m){t.cat=m.key;t.cls=m.cls;}
+      }
       return t;
     };
     if(ia>0){TXS.push(mk('in',ia));added++;}
@@ -597,7 +656,13 @@ function applyMap(){
   save();document.getElementById('bankModal').classList.remove('open');
   document.getElementById('uzone').style.display='none';document.getElementById('ulist').style.display='block';
   if(pQ.length>0)setTimeout(nextFile,200);
-  else{refreshFilters();renderUList();alert(`✅ ${added}건 가져왔습니다!\n계정과목이 자동으로 설정됐어요.\n📊 자금일보 탭에서 확인 후 잘못된 것만 수정하세요.`);}
+  else{
+    refreshFilters();renderUList();
+    const msg=isGranter
+      ?`✅ ${added}건 가져왔습니다!\n그랜터 계정과목이 자동으로 import됐어요.\n📊 자금일보 탭에서 확인 후 잘못된 것만 수정하세요.`
+      :`✅ ${added}건 가져왔습니다!\n계정과목이 자동으로 설정됐어요.\n📊 자금일보 탭에서 확인 후 잘못된 것만 수정하세요.`;
+    alert(msg);
+  }
 }
 
 function renderUList(){
