@@ -131,6 +131,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <button class="tab" onclick="showPage('bank')">🏦 은행별</button>
   <button class="tab" onclick="showPage('chart')">📈 월별분석</button>
   <button class="tab" onclick="showPage('accounts')">⚙️ 계정과목</button>
+  <button class="tab" onclick="showPage('bankset')">🏦 계좌설정</button>
 </div>
 
 <div class="main">
@@ -230,7 +231,54 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <div id="cat-manage"></div>
 </div>
 
+<!-- 계좌 설정 -->
+<div id="page-bankset" class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <div class="st" style="margin-bottom:0">계좌 설정</div>
+    <button class="btn pr" onclick="openBA()">+ 계좌 추가</button>
+  </div>
+  <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.7">
+    그랜터 파일의 거래수단 코드를 실제 은행 계좌명으로 매핑합니다.<br>
+    계좌번호 끝 4자리가 일치하는 거래수단을 자동으로 인식합니다.
+  </div>
+  <div id="ba-list"></div>
+</div>
+
 </div><!-- /main -->
+
+<!-- 계좌 추가/편집 모달 -->
+<div class="modal-bg" id="baModal">
+  <div class="modal modal-sm">
+    <h2 id="ba-title">계좌 추가</h2>
+    <div class="sub">계좌번호 끝 4자리로 그랜터 거래수단과 자동 매핑됩니다</div>
+    <input type="hidden" id="ba-ek">
+    <div class="fr"><label>은행명 *</label>
+      <input type="text" id="ba-bank" placeholder="예: 기업은행, 우리은행(거래중지)" list="ba-bank-list">
+      <datalist id="ba-bank-list">
+        <option>국민은행</option><option>국민은행(사모사채)</option>
+        <option>기업은행</option><option>기업은행(신보)</option>
+        <option>우리은행</option><option>우리은행(거래중지)</option>
+        <option>하나은행</option><option>신한은행</option>
+        <option>농협은행</option><option>SC제일은행</option>
+        <option>전북은행</option><option>외화계좌</option>
+      </datalist>
+    </div>
+    <div class="fr"><label>계좌번호 *</label>
+      <input type="text" id="ba-acct" placeholder="예: 281-058081-01-018">
+    </div>
+    <div class="fr"><label>표시명 (비워두면 자동 생성)</label>
+      <input type="text" id="ba-display" placeholder="예: 기업은행 (1018)">
+    </div>
+    <div class="fr"><label>메모</label>
+      <input type="text" id="ba-memo" placeholder="예: 운영계좌, 급여계좌">
+    </div>
+    <div class="fa">
+      <button class="btn dg" id="ba-del-btn" onclick="deleteBA(document.getElementById('ba-ek').value)" style="margin-right:auto;display:none">삭제</button>
+      <button class="btn" onclick="closeBA()">취소</button>
+      <button class="btn pr" onclick="saveBA()">저장</button>
+    </div>
+  </div>
+</div>
 
 <!-- 은행 선택 모달 -->
 <div class="modal-bg" id="bankModal">
@@ -377,9 +425,26 @@ const BP={
 };
 const CR=[{key:'date',label:'날짜 *'},{key:'in',label:'입금액'},{key:'out',label:'출금액'},{key:'amount',label:'금액(합산)'},{key:'name',label:'거래처/적요'},{key:'memo',label:'주요내용/비고'},{key:'balance',label:'잔액'},{key:'cat_col',label:'계정과목(직접)'},{key:'bank_col',label:'계좌(행별)'}];
 
-const SK='jajagm6-txs',AK='jajagm6-accts';
+const SK='jajagm6-txs',AK='jajagm6-accts',BAK='jajagm6-bankaccts';
 let TXS=JSON.parse(localStorage.getItem(SK)||'[]');
 let ACCTS=JSON.parse(localStorage.getItem(AK)||JSON.stringify(DEFAULT_ACCOUNTS));
+// 계좌 등록 데이터 (사용자 계좌 목록)
+const DEFAULT_BANK_ACCOUNTS=[
+  {id:'ba1', bank:'국민은행',        acct:'434701-01-273014', display:'국민은행 (3014)', memo:''},
+  {id:'ba2', bank:'국민은행',        acct:'091801-04-144334', display:'국민은행 (4334)', memo:''},
+  {id:'ba3', bank:'국민은행(사모사채)',acct:'393301-04-115917', display:'국민은행(사모사채) (5917)', memo:''},
+  {id:'ba4', bank:'우리은행',        acct:'1005-102-022197',  display:'우리은행 (2197)', memo:''},
+  {id:'ba5', bank:'우리은행(거래중지)',acct:'1005-803-611213',  display:'우리은행(거래중지) (1213)', memo:''},
+  {id:'ba6', bank:'기업은행',        acct:'281-058081-01-018',display:'기업은행 (1018)', memo:''},
+  {id:'ba7', bank:'기업은행',        acct:'310-108070-01-025',display:'기업은행 (1025)', memo:''},
+  {id:'ba8', bank:'기업은행(신보)',   acct:'310-108070-0-018', display:'기업은행(신보) (0018)', memo:''},
+  {id:'ba9', bank:'하나은행',        acct:'103-910052-06204', display:'하나은행 (6204)', memo:''},
+  {id:'ba10',bank:'신한은행',        acct:'140-010-566976',   display:'신한은행 (6976)', memo:''},
+  {id:'ba11',bank:'농협은행',        acct:'301-0130-3279-11', display:'농협은행 (7911)', memo:''},
+  {id:'ba12',bank:'SC제일은행',      acct:'182-20-203248',    display:'SC제일은행 (3248)', memo:''},
+  {id:'ba13',bank:'전북은행',        acct:'1013-01-4470-682', display:'전북은행 (0682)', memo:''},
+];
+let BANK_ACCOUNTS=JSON.parse(localStorage.getItem(BAK)||JSON.stringify(DEFAULT_BANK_ACCOUNTS));
 let pRows=[],pHdrs=[],pFile='',sBK='',dMap={},pQ=[];
 let dashVM='monthly',bankVM='monthly';
 let cIn,cOut,cTrend,cCls;
@@ -387,12 +452,39 @@ let autoRows=[];
 
 function save(){localStorage.setItem(SK,JSON.stringify(TXS));}
 function saveA(){localStorage.setItem(AK,JSON.stringify(ACCTS));}
+function saveBA_store(){localStorage.setItem(BAK,JSON.stringify(BANK_ACCOUNTS));}
 function fmt(n){return Math.abs(Number(n)).toLocaleString('ko-KR')+'원';}
 function today(){return new Date().toISOString().slice(0,10);}
 function ym(){return today().slice(0,7);}
 function ga(k){return ACCTS.find(a=>a.key===k);}
+// 계좌번호 끝 N자리 추출
+function acctSuffix(acct, n){const d=String(acct).replace(/[^0-9]/g,'');return d.slice(-n);}
 
-// ── 그랜터 계정과목 → 분류 자동 매핑 ───────────────────────────
+// ── 그랜터 거래수단 → 등록된 계좌명으로 변환 ─────────────────────
+function cleanGranterBank(raw){
+  if(!raw)return'기타';
+  const s=String(raw).trim();
+  // 그랜터 코드 끝 숫자 추출
+  const gMatch=s.match(/(\d+)$/);
+  if(gMatch){
+    const gNum=gMatch[1];
+    // 4자리, 3자리 순으로 등록 계좌와 매칭 시도
+    for(const len of [4,3,2]){
+      const suffix=gNum.slice(-len).padStart(len,'0');
+      const found=BANK_ACCOUNTS.find(a=>acctSuffix(a.acct,len)===suffix);
+      if(found)return found.display;
+    }
+  }
+  // 매핑 실패 시 기존 정규화 로직으로 fallback
+  const numMatch=s.match(/(\d{3,})$/);
+  const acctNum=numMatch?numMatch[1].slice(-4):'';
+  let name=s.replace(/\s*\d+$/,'').trim();
+  const normMap={'하나 입출금':'하나은행','하나입출금':'하나은행','하나':'하나은행','국민':'국민은행','기업':'기업은행','신한':'신한은행','우리':'우리은행','농협':'농협은행','카카오':'카카오뱅크','토스':'토스뱅크','외화':'외화계좌'};
+  if(normMap[name])name=normMap[name];
+  if(!name)name=s;
+  return acctNum?`${name} (${acctNum})`:name;
+}
+
 const GCLS={'상품매출':'수익','제품매출':'수익','용역매출':'수익','이자수익':'수익','배당금수익':'수익','외상매출금':'자산','받을어음':'자산','보통예금':'자산','현금':'자산','미착품':'자산','재고자산':'자산','선급금':'자산','단기차입금':'부채','단기차입금(대출금상환)':'부채','장기차입금':'부채','외상매입금':'부채','미지급금':'부채','신용카드대금':'부채','임대보증금':'부채','자본금':'자본','이익잉여금':'자본','단순이체':'자산'};
 function gCls(cat){
   if(!cat)return'';
@@ -532,11 +624,106 @@ function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  ['upload','dashboard','bank','chart','accounts'].forEach((p,i)=>{if(p===id)document.querySelectorAll('.tab')[i].classList.add('active');});
+  ['upload','dashboard','bank','chart','accounts','bankset'].forEach((p,i)=>{if(p===id)document.querySelectorAll('.tab')[i].classList.add('active');});
   if(id==='dashboard')renderDash();
   if(id==='bank')renderBank();
   if(id==='chart'){refreshFilters();renderCharts();}
   if(id==='accounts')renderAccPage();
+  if(id==='bankset')renderBAPage();
+}
+
+// ── 계좌 설정 페이지 ─────────────────────────────────────────────
+function renderBAPage(){
+  const grouped={};
+  BANK_ACCOUNTS.forEach(a=>{
+    if(!grouped[a.bank])grouped[a.bank]=[];
+    grouped[a.bank].push(a);
+  });
+  // 매핑 안 된 그랜터 코드 찾기
+  const unmapped=[];
+  [...new Set(TXS.map(t=>t.bank))].forEach(b=>{
+    const found=BANK_ACCOUNTS.find(a=>a.display===b);
+    if(!found&&b&&b!=='기타')unmapped.push(b);
+  });
+  let html='';
+  if(unmapped.length){
+    html+=`<div style="background:rgba(240,180,41,.1);border:1px solid rgba(240,180,41,.3);border-radius:10px;padding:14px 16px;margin-bottom:20px">
+      <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:8px">⚠️ 매핑되지 않은 계좌 (${unmapped.length}개)</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">아래 계좌가 인식됐지만 등록되지 않았어요. 계좌를 추가하면 정확한 은행명으로 표시됩니다.</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${unmapped.map(b=>`<div style="display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px">
+          <span>${b}</span>
+          <button class="edbtn" onclick="openBA(null,'${b.replace(/'/g,"\\'")}')" style="color:var(--green)">+ 등록</button>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">
+    ${BANK_ACCOUNTS.map(a=>`
+      <div class="ci" style="flex-direction:column;align-items:flex-start;gap:6px;cursor:pointer" onclick="openBA('${a.id}')">
+        <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+          <div style="font-size:14px;font-weight:600">${a.display}</div>
+          <button class="edbtn">편집</button>
+        </div>
+        <div style="font-size:12px;color:var(--text2)">${a.acct}</div>
+        ${a.memo?`<div style="font-size:11px;color:var(--text2);background:rgba(255,255,255,.04);border-radius:4px;padding:2px 8px">${a.memo}</div>`:''}
+      </div>`).join('')}
+  </div>`;
+  document.getElementById('ba-list').innerHTML=html||'<div style="color:var(--text2);font-size:13px">등록된 계좌가 없습니다</div>';
+}
+function openBA(id,prefill){
+  const a=id?BANK_ACCOUNTS.find(x=>x.id===id):null;
+  document.getElementById('ba-title').textContent=a?'계좌 편집':'계좌 추가';
+  document.getElementById('ba-ek').value=id||'';
+  document.getElementById('ba-bank').value=a?a.bank:'';
+  document.getElementById('ba-acct').value=a?a.acct:'';
+  document.getElementById('ba-display').value=a?a.display:'';
+  document.getElementById('ba-memo').value=a?a.memo||'':'';
+  document.getElementById('ba-del-btn').style.display=a?'inline-flex':'none';
+  // prefill: 매핑 안된 코드에서 +등록 클릭
+  if(prefill&&!a){
+    const m=prefill.match(/^(.+?)\s*\((\d+)\)$/);
+    if(m){document.getElementById('ba-bank').value=m[1];document.getElementById('ba-acct').value=m[2];}
+  }
+  document.getElementById('baModal').classList.add('open');
+}
+function closeBA(){document.getElementById('baModal').classList.remove('open');}
+document.addEventListener('DOMContentLoaded',()=>{
+  const baMod=document.getElementById('baModal');
+  if(baMod)baMod.addEventListener('click',e=>{if(e.target===baMod)closeBA();});
+});
+function autoDisplay(bank,acct){
+  const d=acct.replace(/[^0-9]/g,'');
+  const s4=d.slice(-4);
+  return`${bank} (${s4})`;
+}
+function saveBA(){
+  const id=document.getElementById('ba-ek').value;
+  const bank=document.getElementById('ba-bank').value.trim();
+  const acct=document.getElementById('ba-acct').value.trim();
+  let display=document.getElementById('ba-display').value.trim();
+  const memo=document.getElementById('ba-memo').value.trim();
+  if(!bank){alert('은행명을 입력해주세요');return;}
+  if(!acct){alert('계좌번호를 입력해주세요');return;}
+  if(!display)display=autoDisplay(bank,acct);
+  if(id){
+    const idx=BANK_ACCOUNTS.findIndex(a=>a.id===id);
+    if(idx!==-1){
+      const old=BANK_ACCOUNTS[idx].display;
+      BANK_ACCOUNTS[idx]={...BANK_ACCOUNTS[idx],bank,acct,display,memo};
+      // 기존 거래내역의 bank명도 업데이트
+      if(old!==display)TXS.forEach(t=>{if(t.bank===old)t.bank=display;});
+      save();
+    }
+  }else{
+    BANK_ACCOUNTS.push({id:'ba'+Date.now(),bank,acct,display,memo});
+  }
+  saveBA_store();closeBA();renderBAPage();refreshFilters();
+}
+function deleteBA(id){
+  if(!confirm('이 계좌를 삭제하시겠습니까?'))return;
+  BANK_ACCOUNTS=BANK_ACCOUNTS.filter(a=>a.id!==id);
+  saveBA_store();closeBA();renderBAPage();
 }
 
 // ── 파일 업로드 ──────────────────────────────────────────────────
@@ -600,61 +787,118 @@ function buildMap(){
 }
 function renderCP(){
   const s=pRows[0]||[];
+  const p=BP[sBK]||BP.custom;
+  const isGranter=sBK==='granter';
+  // 그랜터는 입금/출금 컬럼이 없고 금액 컬럼 하나로 처리
+  const skipKeys=isGranter?['in','out']:[];
   const opts=['<option value="">-- 없음 --</option>',...pHdrs.map((h,i)=>`<option value="${i}">${h} | ${String(s[i]||'').slice(0,12)}</option>`)].join('');
-  const hd=dMap.date!==undefined,ha=dMap.in!==undefined||dMap.out!==undefined||dMap.amount!==undefined;
-  document.getElementById('mwarn').innerHTML=(!hd||!ha)?'<div class="warn-b">⚠️ 필수 컬럼을 찾지 못했어요. 직접 선택해주세요.</div>':'<div class="ok-b">✅ 컬럼이 자동 감지됐습니다.</div>';
-  document.getElementById('cprev').innerHTML='<div class="cph">감지된 컬럼 — '+pHdrs.length+'개 열</div>'+
-    CR.map(r=>{const val=dMap[r.key]!==undefined?dMap[r.key]:'';const smp=val!==''?String(s[val]||'').slice(0,16):'';
+  const hd=dMap.date!==undefined;
+  const ha=isGranter
+    ?(dMap.amount!==undefined)
+    :(dMap.in!==undefined||dMap.out!==undefined||dMap.amount!==undefined);
+  document.getElementById('mwarn').innerHTML=(!hd||!ha)
+    ?'<div class="warn-b">⚠️ 필수 컬럼을 찾지 못했어요. 직접 선택해주세요.</div>'
+    :'<div class="ok-b">✅ 컬럼이 자동 감지됐습니다.</div>';
+  document.getElementById('cprev').innerHTML='<div class="cph">감지된 컬럼 — '+pHdrs.length+'개 열'+(isGranter?' (그랜터: 금액 = 양수→입금 / 음수→출금)':'')+'</div>'+
+    CR.filter(r=>!skipKeys.includes(r.key)).map(r=>{
+      const val=dMap[r.key]!==undefined?dMap[r.key]:'';
+      const smp=val!==''?String(s[val]||'').slice(0,18):'';
       return`<div class="crow"><div class="crole">${r.label}</div>
         <select class="csel" onchange="updM('${r.key}',this.value)">${opts.replace(`value="${val}"`,`value="${val}" selected`)}</select>
-        ${smp?`<div class="csmp">${smp}</div>`:''}</div>`;}).join('');
+        ${smp?`<div class="csmp">${smp}</div>`:''}</div>`;
+    }).join('');
 }
 function updM(k,v){if(v==='')delete dMap[k];else dMap[k]=parseInt(v);}
 function applyMap(){
   const cn=document.getElementById('cbn').value.trim();
   const isGranter=sBK==='granter';
   const bname=cn||(BP[sBK]?.label||'기타');
-  const dc=dMap.date,ic=dMap.in??null,oc=dMap.out??null,ac=dMap.amount??null,nc=dMap.name??null,mc=dMap.memo??null;
-  const catCol=dMap.cat_col??null; // 그랜터: 계정과목 컬럼
-  const bankCol=dMap.bank_col??null; // 그랜터: 거래수단 컬럼(행별)
+
+  // 날짜 파싱 공통 함수 (ISO 형식 포함)
+  function parseDate(v){
+    if(!v)return'';
+    if(v instanceof Date)return v.toISOString().slice(0,10);
+    const s=String(v).trim().replace(/T.*/,'').replace(/\./g,'-').replace(/\//g,'-').replace(/\s.*/,'');
+    const m=s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+    return m?`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`:'';
+  }
+  // 숫자 파싱 (부호 유지)
+  function parseNum(v){
+    if(v===null||v===undefined||v==='')return 0;
+    const n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));
+    return isNaN(n)?0:n;
+  }
+
+  const dc=dMap.date;
   if(dc===undefined){alert('날짜 컬럼 선택해주세요');return;}
-  if(ic===null&&oc===null&&ac===null){alert('입금액 또는 출금액 컬럼 선택해주세요');return;}
+
   let added=0;
-  pRows.forEach(row=>{
-    const rd=row[dc];let ds='';
-    if(rd instanceof Date)ds=rd.toISOString().slice(0,10);
-    else{
-      // ISO 형식(그랜터): 2026-03-30T14:24:11 → 날짜만 추출
-      const s=String(rd).trim().replace(/T.*/,'').replace(/\./g,'-').replace(/\//g,'-').replace(/\s.*/,'');
-      const m=s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
-      if(m)ds=`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;else return;
-    }
-    const pa=v=>{if(v===null||v===undefined||v==='')return 0;return parseFloat(String(v).replace(/[^0-9.-]/g,''))||0;};
-    let ia=ic!==null?pa(row[ic]):0,oa=oc!==null?pa(row[oc]):0;
-    if(ac!==null&&ia===0&&oa===0){const a=pa(row[ac]);if(a>0)ia=a;else if(a<0)oa=-a;}
-    if(ia===0&&oa===0)return;
-    const name=nc!==null?String(row[nc]??'').trim():'';
-    const memo=mc!==null?String(row[mc]??'').trim():'';
-    // 그랜터: 행별 계좌명 사용
-    const rowBank=bankCol!==null?String(row[bankCol]??'').trim()||bname:bname;
-    // 그랜터: 계정과목 직접 import
-    const granterCatRaw=catCol!==null?String(row[catCol]??'').trim():'';
-    const mk=(type,amount)=>{
-      const t={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5)+added,date:ds,type,bank:rowBank,name:name||(type==='in'?'입금':'출금'),cat:'',cls:'',amount,memo};
-      if(granterCatRaw){
-        // 그랜터 계정과목 직접 사용 + 분류 자동 매핑
-        const acct=ensureGranterCat(granterCatRaw,type);
-        t.cat=acct.key;t.cls=acct.cls||gCls(granterCatRaw);
+
+  // ── 그랜터 전용 파싱 경로 ──────────────────────────────────────
+  if(isGranter){
+    const amtCol=dMap.amount??null;  // 금액 컬럼
+    const nameCol=dMap.name??null;
+    const memoCol=dMap.memo??null;
+    const catCol=dMap.cat_col??null;
+    const bankCol=dMap.bank_col??null;
+    if(amtCol===null){alert('금액 컬럼 선택해주세요');return;}
+    pRows.forEach(row=>{
+      const ds=parseDate(row[dc]);if(!ds)return;
+      // 금액: 양수=입금, 음수=출금 (부호 그대로 읽기)
+      const rawAmt=parseNum(row[amtCol]);
+      if(rawAmt===0)return;
+      const type=rawAmt>0?'in':'out';
+      const amount=Math.abs(rawAmt);
+      const name=nameCol!==null?String(row[nameCol]??'').trim():'';
+      const memo=memoCol!==null?String(row[memoCol]??'').trim():'';
+      const rowBank=bankCol!==null?cleanGranterBank(String(row[bankCol]??'').trim()||bname):bname;
+      const granterCat=catCol!==null?String(row[catCol]??'').trim():'';
+      const t={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5)+added,
+        date:ds,type,bank:rowBank,
+        name:name||(type==='in'?'입금':'출금'),
+        cat:'',cls:'',amount,memo};
+      if(granterCat){
+        const acct=ensureGranterCat(granterCat,type);
+        t.cat=acct.key;t.cls=acct.cls||gCls(granterCat);
       }else{
         const m=autoMatch(t);if(m){t.cat=m.key;t.cls=m.cls;}
       }
-      return t;
-    };
-    if(ia>0){TXS.push(mk('in',ia));added++;}
-    if(oa>0){TXS.push(mk('out',oa));added++;}
-  });
+      TXS.push(t);added++;
+    });
+
+  // ── 일반 은행 파싱 경로 ────────────────────────────────────────
+  }else{
+    const ic=dMap.in??null,oc=dMap.out??null,ac=dMap.amount??null;
+    const nc=dMap.name??null,mc=dMap.memo??null;
+    if(ic===null&&oc===null&&ac===null){alert('입금액 또는 출금액 컬럼 선택해주세요');return;}
+    pRows.forEach(row=>{
+      const ds=parseDate(row[dc]);if(!ds)return;
+      let ia=ic!==null?parseNum(row[ic]):0;
+      let oa=oc!==null?parseNum(row[oc]):0;
+      // 입금/출금 컬럼이 없고 합산 금액 컬럼만 있는 경우
+      if(ac!==null&&ia===0&&oa===0){
+        const a=parseNum(row[ac]);
+        if(a>0)ia=a;else if(a<0)oa=-a;
+      }
+      if(ia===0&&oa===0)return;
+      const name=nc!==null?String(row[nc]??'').trim():'';
+      const memo=mc!==null?String(row[mc]??'').trim():'';
+      const mk=(type,amount)=>{
+        const t={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5)+added,
+          date:ds,type,bank:bname,
+          name:name||(type==='in'?'입금':'출금'),
+          cat:'',cls:'',amount,memo};
+        const m=autoMatch(t);if(m){t.cat=m.key;t.cls=m.cls;}
+        return t;
+      };
+      if(ia>0){TXS.push(mk('in',ia));added++;}
+      if(oa>0){TXS.push(mk('out',oa));added++;}
+    });
+  }
+
   save();document.getElementById('bankModal').classList.remove('open');
-  document.getElementById('uzone').style.display='none';document.getElementById('ulist').style.display='block';
+  document.getElementById('uzone').style.display='none';
+  document.getElementById('ulist').style.display='block';
   if(pQ.length>0)setTimeout(nextFile,200);
   else{
     refreshFilters();renderUList();
