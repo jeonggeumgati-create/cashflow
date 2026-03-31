@@ -176,12 +176,12 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <div class="grid2">
     <div>
       <div class="st">입금 내역</div>
-      <div class="tw" id="tw-in"><table><thead><tr><th>날짜</th><th>거래처</th><th>계정과목</th><th style="text-align:right">금액</th><th>적요</th><th></th></tr></thead><tbody id="tb-in"></tbody></table><div id="sum-in" class="sum-row" style="display:none"></div></div>
+      <div class="tw" id="tw-in"><table><thead><tr><th>날짜</th><th>은행명</th><th>거래처</th><th>계정과목</th><th style="text-align:right">금액</th><th>적요</th><th></th></tr></thead><tbody id="tb-in"></tbody></table><div id="sum-in" class="sum-row" style="display:none"></div></div>
       <div id="ei" class="empty" style="display:none"><div style="font-size:32px;margin-bottom:8px">📥</div>입금 내역 없음</div>
     </div>
     <div>
       <div class="st">출금 내역</div>
-      <div class="tw" id="tw-out"><table><thead><tr><th>날짜</th><th>거래처</th><th>계정과목</th><th style="text-align:right">금액</th><th>적요</th><th></th></tr></thead><tbody id="tb-out"></tbody></table><div id="sum-out" class="sum-row" style="display:none"></div></div>
+      <div class="tw" id="tw-out"><table><thead><tr><th>날짜</th><th>은행명</th><th>거래처</th><th>계정과목</th><th style="text-align:right">금액</th><th>적요</th><th></th></tr></thead><tbody id="tb-out"></tbody></table><div id="sum-out" class="sum-row" style="display:none"></div></div>
       <div id="eo" class="empty" style="display:none"><div style="font-size:32px;margin-bottom:8px">📤</div>출금 내역 없음</div>
     </div>
   </div>
@@ -1014,6 +1014,7 @@ function renderDash(){
   document.getElementById('s-cnt').textContent=txs.length+'건';
   const rh=t=>`<tr>
     <td style="white-space:nowrap">${t.date}</td>
+    <td><span class="tag">${t.bank||'—'}</span></td>
     <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.name}">${t.name||'—'}</td>
     <td>${t.cat?`<span class="tag">${t.cat}</span>`:'<span style="color:var(--gold);font-size:11px">미분류</span>'}</td>
     <td style="text-align:right;font-weight:600;color:${t.type==='in'?'var(--green)':'var(--red)'}">${fmt(t.amount)}</td>
