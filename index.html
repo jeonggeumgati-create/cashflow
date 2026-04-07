@@ -180,29 +180,30 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
     <div id="dfilters"></div>
     <select class="fi" id="f-bank" onchange="renderDash()"><option value="">전체 은행</option></select>
     <select class="fi" id="f-type" onchange="renderDash()"><option value="">입금+출금</option><option value="in">입금만</option><option value="out">출금만</option></select>
-    <select class="fi" id="f-cls" onchange="renderDash()"><option value="">전체 분류</option><option>자산</option><option>부채</option><option>자본</option><option>수익</option><option>비용</option></select>
     <select class="fi" id="f-cat" onchange="renderDash()"><option value="">전체 계정과목</option></select>
     <input class="fi" id="f-search" placeholder="거래처 검색..." onkeyup="renderDash()" style="width:140px">
   </div>
 
-  <!-- 단일 통합 테이블 (인라인 편집) -->
-  <div class="tw" id="tw-dash">
-    <table>
-      <thead><tr>
-        <th style="width:90px">날짜</th>
-        <th style="width:80px">구분</th>
-        <th>은행</th>
-        <th>거래처</th>
-        <th>계정과목</th>
-        <th style="text-align:right;width:130px">금액</th>
-        <th>적요</th>
-        <th style="width:60px"></th>
-      </tr></thead>
-      <tbody id="tb-dash"></tbody>
-    </table>
-    <div id="sum-dash" class="sum-row" style="display:none"></div>
+  <div class="grid2">
+    <div>
+      <div class="st">입금 내역</div>
+      <div class="tw" id="tw-in">
+        <table><thead><tr><th>날짜</th><th>은행</th><th>거래처</th><th>계정과목</th><th style="text-align:right">금액</th><th>적요</th><th style="width:50px"></th></tr></thead>
+        <tbody id="tb-in"></tbody></table>
+        <div id="sum-in" class="sum-row" style="display:none"></div>
+      </div>
+      <div id="ei" class="empty" style="display:none"><div style="font-size:32px;margin-bottom:8px">📥</div>입금 내역 없음</div>
+    </div>
+    <div>
+      <div class="st">출금 내역</div>
+      <div class="tw" id="tw-out">
+        <table><thead><tr><th>날짜</th><th>은행</th><th>거래처</th><th>계정과목</th><th style="text-align:right">금액</th><th>적요</th><th style="width:50px"></th></tr></thead>
+        <tbody id="tb-out"></tbody></table>
+        <div id="sum-out" class="sum-row" style="display:none"></div>
+      </div>
+      <div id="eo" class="empty" style="display:none"><div style="font-size:32px;margin-bottom:8px">📤</div>출금 내역 없음</div>
+    </div>
   </div>
-  <div id="ed" class="empty" style="display:none"><div style="font-size:32px;margin-bottom:8px">📋</div>해당 기간 내역 없음</div>
 </div>
 
 <!-- 은행별 -->
@@ -214,6 +215,7 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
     <div id="b-dfilters"></div>
     <select class="fi" id="b-bank" onchange="renderBank()"><option value="">전체 계좌</option></select>
     <select class="fi" id="b-type" onchange="renderBank()"><option value="">입금+출금</option><option value="in">입금만</option><option value="out">출금만</option></select>
+    <button class="btn gold" onclick="openOBModal()" style="height:34px">기초잔액 설정</button>
   </div>
   <!-- 계좌별 잔액 카드 -->
   <div id="bgrid" class="bgrid" style="margin-bottom:20px"></div>
@@ -353,6 +355,19 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
   </div>
 </div>
 
+
+<!-- 기초잔액 설정 모달 -->
+<div class="modal-bg" id="obModal">
+  <div class="modal" style="width:480px">
+    <h2>기초잔액 설정</h2>
+    <div class="sub">각 계좌의 데이터 시작 이전 잔액을 입력하세요.<br>입력하지 않으면 0원으로 계산됩니다.</div>
+    <div id="ob-list"></div>
+    <div class="fa">
+      <button class="btn" onclick="closeOBModal()">닫기</button>
+      <button class="btn pr" onclick="saveOB()">저장</button>
+    </div>
+  </div>
+</div>
 
 <!-- 새 계정과목 모달 -->
 <div class="modal-bg" id="ncModal">
@@ -993,7 +1008,7 @@ function getFiltered(){
   const{start,end}=getRange('f');
   const bank=document.getElementById('f-bank')?.value||'';
   const type=document.getElementById('f-type')?.value||'';
-  const cls=document.getElementById('f-cls')?.value||'';
+  const cls='';
   const cat=document.getElementById('f-cat')?.value||'';
   const srch=(document.getElementById('f-search')?.value||'').toLowerCase();
   return[...TXS].sort((a,b)=>a.date.localeCompare(b.date))
@@ -1002,7 +1017,7 @@ function getFiltered(){
     .filter(t=>!cls||t.cls===cls).filter(t=>!cat||t.cat===cat)
     .filter(t=>!srch||t.name.toLowerCase().includes(srch)||(t.memo||'').toLowerCase().includes(srch));
 }
-let editingId=null; // 현재 인라인 편집 중인 거래 id
+let editingId=null;
 
 function renderDash(){
   const txs=getFiltered();
@@ -1010,7 +1025,7 @@ function renderDash(){
   const ti=ins.reduce((s,t)=>s+t.amount,0),to=outs.reduce((s,t)=>s+t.amount,0),net=ti-to;
   const allBanks=[...new Set(txs.map(t=>t.bank))].filter(Boolean);
 
-  // ── 요약 카드 (은행별 소계 포함) ──
+  // ── 요약 카드 (은행별 소계) ──
   const bankBreakdown=(type,total)=>allBanks.map(b=>{
     const bt=txs.filter(t=>t.bank===b&&t.type===type);
     const s=bt.reduce((a,t)=>a+t.amount,0);
@@ -1053,19 +1068,18 @@ function renderDash(){
       }).join('')||'<div style="font-size:12px;color:var(--text2)">—</div>'}
     </div>`;
 
-  // ── 통합 테이블 (인라인 편집) ──
+  // ── 인라인 편집 행 생성 ──
   const catOpts='<option value="">미분류</option>'+ACCTS.map(a=>`<option value="${a.key}">${a.key}</option>`).join('');
   const bankOpts=[...new Set(TXS.map(t=>t.bank).filter(Boolean))].map(b=>`<option value="${b}">${b}</option>`).join('');
 
   const makeEditRow=t=>`<tr class="editing" id="erow-${t.id}">
-    <td><input class="ie-input" id="ei-date-${t.id}" type="date" value="${t.date}" style="width:120px"></td>
-    <td><select class="ie-sel" id="ei-type-${t.id}" style="width:70px"><option value="in" ${t.type==='in'?'selected':''}>입금</option><option value="out" ${t.type==='out'?'selected':''}>출금</option></select></td>
-    <td><select class="ie-sel" id="ei-bank-${t.id}" style="width:110px">${bankOpts.replace(`value="${t.bank}"`,`value="${t.bank}" selected`)}</select></td>
-    <td><input class="ie-input" id="ei-name-${t.id}" value="${t.name||''}" placeholder="거래처" list="enl" style="width:120px"></td>
-    <td><select class="ie-sel" id="ei-cat-${t.id}" style="width:110px">${catOpts.replace(`value="${t.cat||''}"`,`value="${t.cat||''}" selected`)}</select></td>
-    <td><input class="ie-input" id="ei-amt-${t.id}" type="number" value="${t.amount}" style="width:110px;text-align:right"></td>
-    <td><input class="ie-input" id="ei-memo-${t.id}" value="${t.memo||''}" placeholder="적요" style="width:120px"></td>
-    <td style="white-space:nowrap">
+    <td><input class="ie-input" id="ei-date-${t.id}" type="date" value="${t.date}" style="width:110px"></td>
+    <td><select class="ie-sel" id="ei-bank-${t.id}" style="width:100px">${bankOpts.replace(`value="${t.bank}"`,`value="${t.bank}" selected`)}</select></td>
+    <td><input class="ie-input" id="ei-name-${t.id}" value="${t.name||''}" placeholder="거래처" list="enl" style="width:100px"></td>
+    <td><select class="ie-sel" id="ei-cat-${t.id}" style="width:100px">${catOpts.replace(`value="${t.cat||''}"`,`value="${t.cat||''}" selected`)}</select></td>
+    <td><input class="ie-input" id="ei-amt-${t.id}" type="number" value="${t.amount}" style="width:100px;text-align:right"></td>
+    <td><input class="ie-input" id="ei-memo-${t.id}" value="${t.memo||''}" placeholder="적요" style="width:100px"></td>
+    <td style="white-space:nowrap;padding:4px 6px">
       <button class="ie-save" onclick="saveInline('${t.id}')">저장</button>
       <button class="ie-cancel" onclick="cancelInline('${t.id}')">취소</button>
       <button class="ie-del" onclick="delInline('${t.id}')">삭제</button>
@@ -1074,26 +1088,26 @@ function renderDash(){
 
   const makeRow=t=>`<tr id="row-${t.id}">
     <td style="white-space:nowrap;font-size:12px">${t.date}</td>
-    <td><span class="badge ${t.type}">${t.type==='in'?'입금':'출금'}</span></td>
     <td><span class="tag" style="font-size:11px">${t.bank||'—'}</span></td>
     <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.name}">${t.name||'—'}</td>
     <td>${t.cat?`<span class="tag">${t.cat}</span>`:'<span style="color:var(--gold);font-size:11px">미분류</span>'}</td>
     <td style="text-align:right;font-weight:600;color:${t.type==='in'?'var(--green)':'var(--red)'}">${fmt(t.amount)}</td>
-    <td style="color:var(--text2);font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.memo||''}">${t.memo||''}</td>
+    <td style="color:var(--text2);font-size:12px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.memo||''}">${t.memo||''}</td>
     <td><button class="edbtn" onclick="startInline('${t.id}')">편집</button></td>
   </tr>`;
 
-  const tbody=document.getElementById('tb-dash');
-  tbody.innerHTML=txs.length?txs.map(t=>t.id===editingId?makeEditRow(t):makeRow(t)).join(''):'';
+  // ── 입금/출금 분리 렌더 ──
+  document.getElementById('tb-in').innerHTML  = ins.length  ? ins.map(t=>t.id===editingId?makeEditRow(t):makeRow(t)).join('') : '';
+  document.getElementById('tb-out').innerHTML = outs.length ? outs.map(t=>t.id===editingId?makeEditRow(t):makeRow(t)).join('') : '';
 
-  const sd=document.getElementById('sum-dash');
-  if(txs.length){
-    sd.style.display='flex';
-    sd.innerHTML=`<span style="color:var(--text2)">총 ${txs.length}건</span><span style="color:var(--green)">입금 ${fmt(ti)}</span><span style="color:var(--red)">출금 ${fmt(to)}</span><strong style="color:${net>=0?'var(--green)':'var(--red)'}">순유동 ${net>=0?'':'-'}${fmt(net)}</strong>`;
-  }else sd.style.display='none';
+  const si=document.getElementById('sum-in'),so=document.getElementById('sum-out');
+  if(ins.length){si.style.display='flex';si.innerHTML=`<span>합계</span><strong style="color:var(--green)">${fmt(ti)}</strong>`;}else si.style.display='none';
+  if(outs.length){so.style.display='flex';so.innerHTML=`<span>합계</span><strong style="color:var(--red)">${fmt(to)}</strong>`;}else so.style.display='none';
 
-  document.getElementById('tw-dash').style.display=txs.length?'':'none';
-  document.getElementById('ed').style.display=txs.length?'none':'block';
+  document.getElementById('ei').style.display  = ins.length  ? 'none' : 'block';
+  document.getElementById('eo').style.display  = outs.length ? 'none' : 'block';
+  document.getElementById('tw-in').style.display  = ins.length  ? '' : 'none';
+  document.getElementById('tw-out').style.display = outs.length ? '' : 'none';
 }
 
 // ── 인라인 편집 함수 ─────────────────────────────────────────────
@@ -1144,7 +1158,7 @@ function renderBank(){
     const bt=periodTxs.filter(t=>t.bank===b);
     const is=bt.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
     const os=bt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
-    const prevBal=TXS.filter(t=>t.bank===b&&t.date<start).reduce((s,t)=>s+(t.type==='in'?t.amount:-t.amount),0);
+    const prevBal=getBankOB(b)+TXS.filter(t=>t.bank===b&&t.date<start).reduce((s,t)=>s+(t.type==='in'?t.amount:-t.amount),0);
     const curBal=prevBal+is-os;
     const isSelected=selBank===b;
     return`<div class="bcard" style="cursor:pointer;${isSelected?'border-color:var(--green);background:rgba(0,200,150,.06)':''}"
@@ -1181,7 +1195,7 @@ function renderBank(){
     if(!bt.length)return'';
     const is=bt.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
     const os=bt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
-    const prevBal=TXS.filter(t=>t.bank===b&&t.date<start).reduce((s,t)=>s+(t.type==='in'?t.amount:-t.amount),0);
+    const prevBal=getBankOB(b)+TXS.filter(t=>t.bank===b&&t.date<start).reduce((s,t)=>s+(t.type==='in'?t.amount:-t.amount),0);
     let running=prevBal;
     const rows=bt.map(t=>{
       running+=(t.type==='in'?t.amount:-t.amount);
@@ -1237,9 +1251,49 @@ function renderBank(){
 function filterByBank(b){
   const el=document.getElementById('b-bank');
   if(!el)return;
-  el.value=(el.value===b)?'':b;
+  // 은행명에 특수문자 있을 수 있으므로 option value와 정확히 비교
+  const cur=el.value;
+  el.value=(cur===b)?'':b;
   renderBank();
 }
+
+// ── 기초잔액 ─────────────────────────────────────────────────────
+const OBK='jajagm6-ob'; // opening balance store key
+let OB=JSON.parse(localStorage.getItem(OBK)||'{}'); // {bankName: amount}
+function saveOB_store(){localStorage.setItem(OBK,JSON.stringify(OB));}
+
+function getBankOB(bank){return OB[bank]||0;}
+
+function openOBModal(){
+  const banks=[...new Set(TXS.map(t=>t.bank).filter(Boolean))].sort();
+  document.getElementById('ob-list').innerHTML=banks.length
+    ? banks.map(b=>`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:500;min-width:160px;flex:1">${b}</div>
+          <input class="fi" type="number" id="ob-${CSS.escape(b)}" value="${OB[b]||0}"
+            placeholder="0" style="width:160px;text-align:right"
+            data-bank="${b}">
+          <span style="font-size:12px;color:var(--text2)">원</span>
+        </div>`).join('')
+    : '<div style="color:var(--text2);font-size:13px">먼저 거래내역을 업로드하세요</div>';
+  document.getElementById('obModal').classList.add('open');
+}
+function closeOBModal(){document.getElementById('obModal').classList.remove('open');}
+function saveOB(){
+  document.querySelectorAll('#ob-list input[data-bank]').forEach(el=>{
+    const bank=el.getAttribute('data-bank');
+    const val=parseFloat(el.value)||0;
+    if(val!==0)OB[bank]=val;
+    else delete OB[bank];
+  });
+  saveOB_store();closeOBModal();renderBank();
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const m=document.getElementById('obModal');
+  if(m)m.addEventListener('click',e=>{if(e.target===m)closeOBModal();});
+  const bm=document.getElementById('baModal');
+  if(bm)bm.addEventListener('click',e=>{if(e.target===bm)closeBA();});
+});
 
 // ── 차트 ────────────────────────────────────────────────────────
 function renderCharts(){
