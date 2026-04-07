@@ -112,9 +112,10 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
 .ie-del{background:rgba(255,94,94,.15);color:var(--red);border:none;border-radius:5px;padding:3px 8px;font-size:12px;cursor:pointer;font-family:inherit}
 /* 요약 카드 */
 .sum-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
-.sum-card-big{font-size:22px;font-weight:700;margin:4px 0 10px}
-.sum-bank-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-top:1px solid var(--border);color:var(--text2)}
-.sum-bank-row:first-of-type{border-top:none}
+.sum-card-big{font-size:22px;font-weight:700;margin:4px 0 8px}
+.sum-bank-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;color:var(--text2);border-top:1px solid var(--border)}
+.sum-bank-row+.sum-bank-row{border-top:1px solid var(--border)}
+.sum-bank-divider{border-top:1px solid var(--border);margin:6px 0 4px}
 /* 자동매핑 테이블 */
 .automap-table{width:100%;border-collapse:collapse;font-size:13px}
 .automap-table th{padding:8px 10px;text-align:left;color:var(--text2);font-weight:500;border-bottom:1px solid var(--border);background:var(--navy);font-size:12px}
@@ -352,26 +353,6 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
   </div>
 </div>
 
-<!-- 거래 편집 모달 -->
-<div class="modal-bg" id="editModal">
-  <div class="modal modal-sm">
-    <h2>거래 정보 수정</h2>
-    <input type="hidden" id="eid">
-    <div class="fr"><label>날짜</label><input type="date" id="e-date"></div>
-    <div class="fr"><label>구분</label><select id="e-type"><option value="in">입금</option><option value="out">출금</option></select></div>
-    <div class="fr"><label>거래처명</label><input type="text" id="e-name" list="enl"><datalist id="enl"></datalist></div>
-    <div class="fr"><label>계정 분류</label><select id="e-cls" onchange="syncCS()"><option value="">선택안함</option><option>자산</option><option>부채</option><option>자본</option><option>수익</option><option>비용</option></select></div>
-    <div class="fr"><label>계정과목</label><select id="e-cat"><option value="">선택안함</option></select></div>
-    <div class="fr"><label>금액 (원)</label><input type="number" id="e-amt" min="0"></div>
-    <div class="fr"><label>주요내용</label><textarea id="e-memo"></textarea></div>
-    <div class="fr"><label>은행</label><input type="text" id="e-bank"></div>
-    <div class="fa">
-      <button class="btn dg" onclick="delEntry(document.getElementById('eid').value)" style="margin-right:auto">삭제</button>
-      <button class="btn" onclick="closeEM()">취소</button>
-      <button class="btn pr" onclick="saveEdit()">저장</button>
-    </div>
-  </div>
-</div>
 
 <!-- 새 계정과목 모달 -->
 <div class="modal-bg" id="ncModal">
@@ -1042,30 +1023,34 @@ function renderDash(){
     <div class="sum-card">
       <div style="font-size:12px;color:var(--text2)">총 입금</div>
       <div class="sum-card-big cv-g">${fmt(ti)}</div>
-      <div>${bankBreakdown('in',ti)||'<div style="font-size:11px;color:var(--text2)">—</div>'}</div>
+      <div class="sum-bank-divider"></div>
+      ${bankBreakdown('in',ti)||'<div style="font-size:12px;color:var(--text2)">—</div>'}
     </div>
     <div class="sum-card">
       <div style="font-size:12px;color:var(--text2)">총 출금</div>
       <div class="sum-card-big cv-r">${fmt(to)}</div>
-      <div>${bankBreakdown('out',to)||'<div style="font-size:11px;color:var(--text2)">—</div>'}</div>
+      <div class="sum-bank-divider"></div>
+      ${bankBreakdown('out',to)||'<div style="font-size:12px;color:var(--text2)">—</div>'}
     </div>
     <div class="sum-card">
       <div style="font-size:12px;color:var(--text2)">순 유동액</div>
       <div class="sum-card-big ${net>=0?'cv-g':'cv-r'}">${net>=0?'':'-'}${fmt(net)}</div>
+      <div class="sum-bank-divider"></div>
       ${allBanks.map(b=>{
         const bi=txs.filter(t=>t.bank===b&&t.type==='in').reduce((s,t)=>s+t.amount,0);
         const bo=txs.filter(t=>t.bank===b&&t.type==='out').reduce((s,t)=>s+t.amount,0);
         const bn=bi-bo;if(!bi&&!bo)return'';
         return`<div class="sum-bank-row"><span>${b}</span><span style="color:${bn>=0?'var(--green)':'var(--red)'}">${bn>=0?'':'-'}${fmt(bn)}</span></div>`;
-      }).join('')||'<div style="font-size:11px;color:var(--text2)">—</div>'}
+      }).join('')||'<div style="font-size:12px;color:var(--text2)">—</div>'}
     </div>
     <div class="sum-card">
       <div style="font-size:12px;color:var(--text2)">거래 건수</div>
       <div class="sum-card-big cv-gold">${txs.length}건</div>
+      <div class="sum-bank-divider"></div>
       ${allBanks.map(b=>{
         const bc=txs.filter(t=>t.bank===b).length;if(!bc)return'';
         return`<div class="sum-bank-row"><span>${b}</span><span>${bc}건</span></div>`;
-      }).join('')||'<div style="font-size:11px;color:var(--text2)">—</div>'}
+      }).join('')||'<div style="font-size:12px;color:var(--text2)">—</div>'}
     </div>`;
 
   // ── 통합 테이블 (인라인 편집) ──
@@ -1349,40 +1334,8 @@ function delCat(key){
   ACCTS=ACCTS.filter(a=>a.key!==key);TXS.forEach(t=>{if(t.cat===key){t.cat='';t.cls='';}});save();saveA();renderAccPage();refreshFilters();
 }
 
-// ── 거래 편집 ────────────────────────────────────────────────────
-function syncCS(){
-  const cls=document.getElementById('e-cls').value,cur=document.getElementById('e-cat').value;
-  const filtered=cls?ACCTS.filter(a=>a.cls===cls):ACCTS;
-  document.getElementById('e-cat').innerHTML='<option value="">선택안함</option>'+filtered.map(a=>`<option value="${a.key}" ${a.key===cur?'selected':''}>${a.key}</option>`).join('');
-}
-function openEdit(id){
-  const t=TXS.find(x=>x.id===id);if(!t)return;
-  document.getElementById('eid').value=id;
-  document.getElementById('e-date').value=t.date;
-  document.getElementById('e-type').value=t.type;
-  document.getElementById('e-name').value=t.name||'';
-  document.getElementById('e-cls').value=t.cls||'';
-  syncCS();document.getElementById('e-cat').value=t.cat||'';
-  document.getElementById('e-amt').value=t.amount;
-  document.getElementById('e-memo').value=t.memo||'';
-  document.getElementById('e-bank').value=t.bank||'';
-  document.getElementById('editModal').classList.add('open');
-}
-function closeEM(){document.getElementById('editModal').classList.remove('open');}
-document.getElementById('editModal').addEventListener('click',e=>{if(e.target===document.getElementById('editModal'))closeEM();});
 document.getElementById('ncModal').addEventListener('click',e=>{if(e.target===document.getElementById('ncModal'))closeNC();});
 document.getElementById('autoModal').addEventListener('click',e=>{if(e.target===document.getElementById('autoModal'))closeAuto();});
-function saveEdit(){
-  const id=document.getElementById('eid').value,idx=TXS.findIndex(t=>t.id===id);if(idx===-1)return;
-  const cat=document.getElementById('e-cat').value;
-  const cls=cat?ga(cat)?.cls||document.getElementById('e-cls').value:document.getElementById('e-cls').value;
-  TXS[idx]={...TXS[idx],date:document.getElementById('e-date').value,type:document.getElementById('e-type').value,name:document.getElementById('e-name').value.trim(),cls,cat,amount:parseFloat(document.getElementById('e-amt').value)||0,memo:document.getElementById('e-memo').value.trim(),bank:document.getElementById('e-bank').value.trim()};
-  save();closeEM();renderDash();refreshFilters();
-}
-function delEntry(id){
-  if(!confirm('이 거래를 삭제하시겠습니까?'))return;
-  TXS=TXS.filter(t=>t.id!==id);save();closeEM();renderDash();refreshFilters();
-}
 
 // ── 초기화 ──────────────────────────────────────────────────────
 if(TXS.length>0){document.getElementById('uzone').style.display='none';document.getElementById('ulist').style.display='block';renderUList();refreshFilters();}
