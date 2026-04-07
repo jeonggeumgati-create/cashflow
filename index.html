@@ -102,6 +102,19 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .cil{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .clsg{margin-bottom:22px}
 .clsh{font-size:13px;font-weight:700;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+/* 인라인 편집 행 */
+tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
+.ie-input{height:28px;padding:0 8px;background:var(--navy);border:1px solid var(--green);border-radius:5px;color:var(--text);font-size:12px;font-family:inherit;width:100%}
+.ie-input:focus{outline:none}
+.ie-sel{height:28px;padding:0 6px;background:var(--navy);border:1px solid var(--green);border-radius:5px;color:var(--text);font-size:12px;font-family:inherit;width:100%}
+.ie-save{background:var(--green);color:#fff;border:none;border-radius:5px;padding:3px 10px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.ie-cancel{background:rgba(255,255,255,.08);color:var(--text2);border:none;border-radius:5px;padding:3px 8px;font-size:12px;cursor:pointer;font-family:inherit}
+.ie-del{background:rgba(255,94,94,.15);color:var(--red);border:none;border-radius:5px;padding:3px 8px;font-size:12px;cursor:pointer;font-family:inherit}
+/* 요약 카드 */
+.sum-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.sum-card-big{font-size:22px;font-weight:700;margin:4px 0 10px}
+.sum-bank-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-top:1px solid var(--border);color:var(--text2)}
+.sum-bank-row:first-of-type{border-top:none}
 /* 자동매핑 테이블 */
 .automap-table{width:100%;border-collapse:collapse;font-size:13px}
 .automap-table th{padding:8px 10px;text-align:left;color:var(--text2);font-weight:500;border-bottom:1px solid var(--border);background:var(--navy);font-size:12px}
@@ -156,12 +169,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
 
 <!-- 자금일보 -->
 <div id="page-dashboard" class="page">
-  <div class="grid4">
-    <div class="card"><div class="card-title">총 입금</div><div class="card-value cv-g" id="s-in">—</div></div>
-    <div class="card"><div class="card-title">총 출금</div><div class="card-value cv-r" id="s-out">—</div></div>
-    <div class="card"><div class="card-title">순 유동액</div><div class="card-value cv-b" id="s-net">—</div></div>
-    <div class="card"><div class="card-title">거래 건수</div><div class="card-value cv-gold" id="s-cnt">—</div></div>
-  </div>
+  <!-- 요약 카드 (은행별 소계 포함) -->
+  <div id="dash-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px"></div>
+
   <div class="filters">
     <button class="fbtn" onclick="setVM('daily',this)">일별</button>
     <button class="fbtn active" onclick="setVM('monthly',this)">월별</button>
@@ -173,34 +183,41 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <select class="fi" id="f-cat" onchange="renderDash()"><option value="">전체 계정과목</option></select>
     <input class="fi" id="f-search" placeholder="거래처 검색..." onkeyup="renderDash()" style="width:140px">
   </div>
-  <div class="grid2">
-    <div>
-      <div class="st">입금 내역</div>
-      <div class="tw" id="tw-in"><table><thead><tr><th>날짜</th><th>은행명</th><th>거래처</th><th>계정과목</th><th style="text-align:right">금액</th><th>적요</th><th></th></tr></thead><tbody id="tb-in"></tbody></table><div id="sum-in" class="sum-row" style="display:none"></div></div>
-      <div id="ei" class="empty" style="display:none"><div style="font-size:32px;margin-bottom:8px">📥</div>입금 내역 없음</div>
-    </div>
-    <div>
-      <div class="st">출금 내역</div>
-      <div class="tw" id="tw-out"><table><thead><tr><th>날짜</th><th>은행명</th><th>거래처</th><th>계정과목</th><th style="text-align:right">금액</th><th>적요</th><th></th></tr></thead><tbody id="tb-out"></tbody></table><div id="sum-out" class="sum-row" style="display:none"></div></div>
-      <div id="eo" class="empty" style="display:none"><div style="font-size:32px;margin-bottom:8px">📤</div>출금 내역 없음</div>
-    </div>
+
+  <!-- 단일 통합 테이블 (인라인 편집) -->
+  <div class="tw" id="tw-dash">
+    <table>
+      <thead><tr>
+        <th style="width:90px">날짜</th>
+        <th style="width:80px">구분</th>
+        <th>은행</th>
+        <th>거래처</th>
+        <th>계정과목</th>
+        <th style="text-align:right;width:130px">금액</th>
+        <th>적요</th>
+        <th style="width:60px"></th>
+      </tr></thead>
+      <tbody id="tb-dash"></tbody>
+    </table>
+    <div id="sum-dash" class="sum-row" style="display:none"></div>
   </div>
+  <div id="ed" class="empty" style="display:none"><div style="font-size:32px;margin-bottom:8px">📋</div>해당 기간 내역 없음</div>
 </div>
 
 <!-- 은행별 -->
 <div id="page-bank" class="page">
-  <div class="st">은행별 유동액 현황</div>
-  <div id="bgrid" class="bgrid"></div>
-  <div class="st" style="margin-top:8px">은행별 거래 내역</div>
   <div class="filters">
     <button class="fbtn" onclick="setBVM('daily',this)">일별</button>
     <button class="fbtn active" onclick="setBVM('monthly',this)">월별</button>
     <button class="fbtn" onclick="setBVM('custom',this)">기간지정</button>
     <div id="b-dfilters"></div>
-    <select class="fi" id="b-bank" onchange="renderBank()"><option value="">전체 은행</option></select>
+    <select class="fi" id="b-bank" onchange="renderBank()"><option value="">전체 계좌</option></select>
     <select class="fi" id="b-type" onchange="renderBank()"><option value="">입금+출금</option><option value="in">입금만</option><option value="out">출금만</option></select>
   </div>
-  <div class="tw"><table><thead><tr><th>날짜</th><th>은행</th><th>구분</th><th>거래처</th><th>계정과목</th><th>적요</th><th style="text-align:right">금액</th></tr></thead><tbody id="tb-bank"></tbody></table><div id="sum-bank" class="sum-row" style="display:none"></div></div>
+  <!-- 계좌별 잔액 카드 -->
+  <div id="bgrid" class="bgrid" style="margin-bottom:20px"></div>
+  <!-- 계좌별 상세 원장 -->
+  <div id="bank-ledger"></div>
 </div>
 
 <!-- 월별 분석 -->
@@ -1004,121 +1021,238 @@ function getFiltered(){
     .filter(t=>!cls||t.cls===cls).filter(t=>!cat||t.cat===cat)
     .filter(t=>!srch||t.name.toLowerCase().includes(srch)||(t.memo||'').toLowerCase().includes(srch));
 }
+let editingId=null; // 현재 인라인 편집 중인 거래 id
+
 function renderDash(){
   const txs=getFiltered();
   const ins=txs.filter(t=>t.type==='in'),outs=txs.filter(t=>t.type==='out');
   const ti=ins.reduce((s,t)=>s+t.amount,0),to=outs.reduce((s,t)=>s+t.amount,0),net=ti-to;
-  document.getElementById('s-in').textContent=fmt(ti);
-  document.getElementById('s-out').textContent=fmt(to);
-  const sn=document.getElementById('s-net');sn.textContent=fmt(net);sn.className='card-value '+(net>=0?'cv-g':'cv-r');
-  document.getElementById('s-cnt').textContent=txs.length+'건';
-  const rh=t=>`<tr>
-    <td style="white-space:nowrap">${t.date}</td>
-    <td><span class="tag">${t.bank||'—'}</span></td>
-    <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.name}">${t.name||'—'}</td>
+  const allBanks=[...new Set(txs.map(t=>t.bank))].filter(Boolean);
+
+  // ── 요약 카드 (은행별 소계 포함) ──
+  const bankBreakdown=(type,total)=>allBanks.map(b=>{
+    const bt=txs.filter(t=>t.bank===b&&t.type===type);
+    const s=bt.reduce((a,t)=>a+t.amount,0);
+    if(!s)return'';
+    const pct=total?Math.round(s/total*100):0;
+    return`<div class="sum-bank-row"><span>${b}</span><span style="color:${type==='in'?'var(--green)':'var(--red)'}">${fmt(s)}<span style="color:var(--text2);font-size:10px"> ${pct}%</span></span></div>`;
+  }).join('');
+
+  document.getElementById('dash-summary').innerHTML=`
+    <div class="sum-card">
+      <div style="font-size:12px;color:var(--text2)">총 입금</div>
+      <div class="sum-card-big cv-g">${fmt(ti)}</div>
+      <div>${bankBreakdown('in',ti)||'<div style="font-size:11px;color:var(--text2)">—</div>'}</div>
+    </div>
+    <div class="sum-card">
+      <div style="font-size:12px;color:var(--text2)">총 출금</div>
+      <div class="sum-card-big cv-r">${fmt(to)}</div>
+      <div>${bankBreakdown('out',to)||'<div style="font-size:11px;color:var(--text2)">—</div>'}</div>
+    </div>
+    <div class="sum-card">
+      <div style="font-size:12px;color:var(--text2)">순 유동액</div>
+      <div class="sum-card-big ${net>=0?'cv-g':'cv-r'}">${net>=0?'':'-'}${fmt(net)}</div>
+      ${allBanks.map(b=>{
+        const bi=txs.filter(t=>t.bank===b&&t.type==='in').reduce((s,t)=>s+t.amount,0);
+        const bo=txs.filter(t=>t.bank===b&&t.type==='out').reduce((s,t)=>s+t.amount,0);
+        const bn=bi-bo;if(!bi&&!bo)return'';
+        return`<div class="sum-bank-row"><span>${b}</span><span style="color:${bn>=0?'var(--green)':'var(--red)'}">${bn>=0?'':'-'}${fmt(bn)}</span></div>`;
+      }).join('')||'<div style="font-size:11px;color:var(--text2)">—</div>'}
+    </div>
+    <div class="sum-card">
+      <div style="font-size:12px;color:var(--text2)">거래 건수</div>
+      <div class="sum-card-big cv-gold">${txs.length}건</div>
+      ${allBanks.map(b=>{
+        const bc=txs.filter(t=>t.bank===b).length;if(!bc)return'';
+        return`<div class="sum-bank-row"><span>${b}</span><span>${bc}건</span></div>`;
+      }).join('')||'<div style="font-size:11px;color:var(--text2)">—</div>'}
+    </div>`;
+
+  // ── 통합 테이블 (인라인 편집) ──
+  const catOpts='<option value="">미분류</option>'+ACCTS.map(a=>`<option value="${a.key}">${a.key}</option>`).join('');
+  const bankOpts=[...new Set(TXS.map(t=>t.bank).filter(Boolean))].map(b=>`<option value="${b}">${b}</option>`).join('');
+
+  const makeEditRow=t=>`<tr class="editing" id="erow-${t.id}">
+    <td><input class="ie-input" id="ei-date-${t.id}" type="date" value="${t.date}" style="width:120px"></td>
+    <td><select class="ie-sel" id="ei-type-${t.id}" style="width:70px"><option value="in" ${t.type==='in'?'selected':''}>입금</option><option value="out" ${t.type==='out'?'selected':''}>출금</option></select></td>
+    <td><select class="ie-sel" id="ei-bank-${t.id}" style="width:110px">${bankOpts.replace(`value="${t.bank}"`,`value="${t.bank}" selected`)}</select></td>
+    <td><input class="ie-input" id="ei-name-${t.id}" value="${t.name||''}" placeholder="거래처" list="enl" style="width:120px"></td>
+    <td><select class="ie-sel" id="ei-cat-${t.id}" style="width:110px">${catOpts.replace(`value="${t.cat||''}"`,`value="${t.cat||''}" selected`)}</select></td>
+    <td><input class="ie-input" id="ei-amt-${t.id}" type="number" value="${t.amount}" style="width:110px;text-align:right"></td>
+    <td><input class="ie-input" id="ei-memo-${t.id}" value="${t.memo||''}" placeholder="적요" style="width:120px"></td>
+    <td style="white-space:nowrap">
+      <button class="ie-save" onclick="saveInline('${t.id}')">저장</button>
+      <button class="ie-cancel" onclick="cancelInline('${t.id}')">취소</button>
+      <button class="ie-del" onclick="delInline('${t.id}')">삭제</button>
+    </td>
+  </tr>`;
+
+  const makeRow=t=>`<tr id="row-${t.id}">
+    <td style="white-space:nowrap;font-size:12px">${t.date}</td>
+    <td><span class="badge ${t.type}">${t.type==='in'?'입금':'출금'}</span></td>
+    <td><span class="tag" style="font-size:11px">${t.bank||'—'}</span></td>
+    <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.name}">${t.name||'—'}</td>
     <td>${t.cat?`<span class="tag">${t.cat}</span>`:'<span style="color:var(--gold);font-size:11px">미분류</span>'}</td>
     <td style="text-align:right;font-weight:600;color:${t.type==='in'?'var(--green)':'var(--red)'}">${fmt(t.amount)}</td>
-    <td style="color:var(--text2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.memo||''}">${t.memo||''}</td>
-    <td><button class="edbtn" onclick="openEdit('${t.id}')">편집</button></td>
+    <td style="color:var(--text2);font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.memo||''}">${t.memo||''}</td>
+    <td><button class="edbtn" onclick="startInline('${t.id}')">편집</button></td>
   </tr>`;
-  document.getElementById('tb-in').innerHTML=ins.length?ins.map(rh).join(''):'';
-  document.getElementById('tb-out').innerHTML=outs.length?outs.map(rh).join(''):'';
-  const si=document.getElementById('sum-in'),so=document.getElementById('sum-out');
-  if(ins.length){si.style.display='flex';si.innerHTML=`<span>합계</span><strong style="color:var(--green)">${fmt(ti)}</strong>`;}else si.style.display='none';
-  if(outs.length){so.style.display='flex';so.innerHTML=`<span>합계</span><strong style="color:var(--red)">${fmt(to)}</strong>`;}else so.style.display='none';
-  document.getElementById('ei').style.display=ins.length?'none':'block';
-  document.getElementById('eo').style.display=outs.length?'none':'block';
-  document.getElementById('tw-in').style.display=ins.length?'':'none';
-  document.getElementById('tw-out').style.display=outs.length?'':'none';
+
+  const tbody=document.getElementById('tb-dash');
+  tbody.innerHTML=txs.length?txs.map(t=>t.id===editingId?makeEditRow(t):makeRow(t)).join(''):'';
+
+  const sd=document.getElementById('sum-dash');
+  if(txs.length){
+    sd.style.display='flex';
+    sd.innerHTML=`<span style="color:var(--text2)">총 ${txs.length}건</span><span style="color:var(--green)">입금 ${fmt(ti)}</span><span style="color:var(--red)">출금 ${fmt(to)}</span><strong style="color:${net>=0?'var(--green)':'var(--red)'}">순유동 ${net>=0?'':'-'}${fmt(net)}</strong>`;
+  }else sd.style.display='none';
+
+  document.getElementById('tw-dash').style.display=txs.length?'':'none';
+  document.getElementById('ed').style.display=txs.length?'none':'block';
 }
 
-// ── 은행별 렌더 ──────────────────────────────────────────────────
+// ── 인라인 편집 함수 ─────────────────────────────────────────────
+function startInline(id){
+  editingId=id;
+  renderDash();
+  // 날짜 input에 포커스
+  setTimeout(()=>document.getElementById('ei-date-'+id)?.focus(),50);
+}
+function cancelInline(id){editingId=null;renderDash();}
+function saveInline(id){
+  const idx=TXS.findIndex(t=>t.id===id);if(idx===-1)return;
+  const cat=document.getElementById('ei-cat-'+id)?.value||'';
+  const cls=ga(cat)?.cls||'';
+  TXS[idx]={...TXS[idx],
+    date: document.getElementById('ei-date-'+id)?.value||TXS[idx].date,
+    type: document.getElementById('ei-type-'+id)?.value||TXS[idx].type,
+    bank: document.getElementById('ei-bank-'+id)?.value||TXS[idx].bank,
+    name: document.getElementById('ei-name-'+id)?.value?.trim()||TXS[idx].name,
+    cat, cls,
+    amount: parseFloat(document.getElementById('ei-amt-'+id)?.value)||TXS[idx].amount,
+    memo:  document.getElementById('ei-memo-'+id)?.value?.trim()||'',
+  };
+  save();editingId=null;renderDash();refreshFilters();
+}
+function delInline(id){
+  if(!confirm('이 거래를 삭제하시겠습니까?'))return;
+  TXS=TXS.filter(t=>t.id!==id);save();editingId=null;renderDash();refreshFilters();
+}
+
+// ── 은행별 렌더 (계좌 원장) ──────────────────────────────────────
 function renderBank(){
   refreshFilters();
   const{start,end}=getRange('b');
   const selBank=document.getElementById('b-bank')?.value||'';
   const selType=document.getElementById('b-type')?.value||'';
+  const prevLabel=bankVM==='daily'?'전일잔액':bankVM==='monthly'?'전월잔액':'기간전잔액';
+  const curLabel=bankVM==='daily'?'금일잔액':bankVM==='monthly'?'금월잔액':'기간말잔액';
 
-  // 기간 + 구분 필터 적용 (은행 필터는 테이블에만 적용, 카드는 모든 은행)
   const periodTxs=[...TXS].sort((a,b)=>a.date.localeCompare(b.date))
     .filter(t=>t.date>=start&&t.date<=end)
     .filter(t=>!selType||t.type===selType);
 
-  // 테이블용: 은행 필터까지 추가 적용
-  const tableTxs=selBank?periodTxs.filter(t=>t.bank===selBank):periodTxs;
+  const allBanks=selBank?[selBank]:[...new Set(TXS.map(t=>t.bank).filter(Boolean))];
 
-  // 기간 내 존재하는 은행만 카드에 표시
-  const banks=selBank?[selBank]:[...new Set(periodTxs.map(t=>t.bank))];
-
-  // 유동액 카드 - 기간 필터 적용
-  document.getElementById('bgrid').innerHTML=banks.map(b=>{
+  // 잔액 요약 카드
+  document.getElementById('bgrid').innerHTML=allBanks.map(b=>{
     const bt=periodTxs.filter(t=>t.bank===b);
     const is=bt.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
     const os=bt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
-    // 전기잔액: 기간 시작일 이전 모든 거래 합산
-    const prevBal=TXS.filter(t=>t.bank===b&&t.date<start)
-      .reduce((s,t)=>s+(t.type==='in'?t.amount:-t.amount),0);
+    const prevBal=TXS.filter(t=>t.bank===b&&t.date<start).reduce((s,t)=>s+(t.type==='in'?t.amount:-t.amount),0);
     const curBal=prevBal+is-os;
-    const net=is-os;
-    const pct=is?Math.min(os/is*100,100).toFixed(0):0;
     const isSelected=selBank===b;
-    const periodLabel=start===end?start:(bankVM==='monthly'?start.slice(0,7):start+' ~ '+end);
-    const prevLabel=bankVM==='daily'?'전일잔액':bankVM==='monthly'?'전월잔액':'기간전잔액';
-    const curLabel=bankVM==='daily'?'금일잔액':bankVM==='monthly'?'금월잔액':'기간말잔액';
     return`<div class="bcard" style="cursor:pointer;${isSelected?'border-color:var(--green);background:rgba(0,200,150,.06)':''}"
-      onclick="filterByBank('${b.replace(/'/g,"\\'")}')">
+      onclick="filterByBank('${b.replace(/'/g,"\\'").replace(/"/g,'\\"')}')">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <span style="font-size:13px;font-weight:600;color:var(--text)">🏦 ${b}</span>
-        ${isSelected?`<span style="font-size:11px;color:var(--green);font-weight:600">선택됨 ✓</span>`:`<span style="font-size:11px;color:var(--text2)">${bt.length}건</span>`}
+        <span style="font-size:13px;font-weight:600">🏦 ${b}</span>
+        ${isSelected?'<span style="font-size:11px;color:var(--green)">선택됨 ✓</span>':'<span style="font-size:11px;color:var(--text2)">'+bt.length+'건</span>'}
       </div>
-      <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:8px">
+      <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
         <div style="display:flex;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)">
           <span style="font-size:11px;color:var(--text2)">${prevLabel}</span>
-          <span style="font-size:12px;font-weight:600;color:${prevBal>=0?'var(--blue)':'var(--red)'}">${prevBal>=0?'':'-'}${fmt(prevBal)}</span>
+          <span style="font-size:12px;font-weight:600;color:${prevBal>=0?'var(--blue)':'var(--red)'}">${prevBal<0?'-':''}${fmt(prevBal)}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--border)">
           <span style="font-size:11px;color:var(--text2)">입금</span>
-          <span style="font-size:12px;font-weight:600;color:var(--green)">+${fmt(is)}</span>
+          <span style="font-size:12px;color:var(--green)">+${fmt(is)}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--border)">
           <span style="font-size:11px;color:var(--text2)">출금</span>
-          <span style="font-size:12px;font-weight:600;color:var(--red)">-${fmt(os)}</span>
+          <span style="font-size:12px;color:var(--red)">-${fmt(os)}</span>
         </div>
         <div style="display:flex;justify-content:space-between;padding:7px 10px;background:rgba(0,200,150,.06)">
           <span style="font-size:11px;font-weight:600;color:var(--green)">${curLabel}</span>
-          <span style="font-size:13px;font-weight:700;color:${curBal>=0?'var(--green)':'var(--red)'}">${curBal>=0?'':'-'}${fmt(curBal)}</span>
+          <span style="font-size:13px;font-weight:700;color:${curBal>=0?'var(--green)':'var(--red)'}">${curBal<0?'-':''}${fmt(curBal)}</span>
         </div>
       </div>
-      <div class="pb"><div class="pf" style="width:${pct}%;background:var(--red)"></div></div>
     </div>`;
   }).join('')||'<div class="empty">🏦 해당 기간 데이터 없음</div>';
 
-  // 테이블
-  document.getElementById('tb-bank').innerHTML=tableTxs.map(t=>`<tr>
-    <td style="white-space:nowrap">${t.date}</td>
-    <td><span class="tag">${t.bank}</span></td>
-    <td><span class="badge ${t.type}">${t.type==='in'?'입금':'출금'}</span></td>
-    <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.name}">${t.name||'—'}</td>
-    <td>${t.cat?`<span class="tag">${t.cat}</span>`:''}</td>
-    <td style="color:var(--text2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.memo||''}</td>
-    <td style="text-align:right;font-weight:600;color:${t.type==='in'?'var(--green)':'var(--red)'}">
-      ${t.type==='in'?'+':'-'}${fmt(t.amount)}</td></tr>`).join('')||
-    '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text2)">데이터 없음</td></tr>';
-
-  const sb=document.getElementById('sum-bank');
-  if(tableTxs.length){
-    const si=tableTxs.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
-    const so=tableTxs.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
-    sb.style.display='flex';
-    sb.innerHTML=`<span>합계</span><span style="color:var(--green)">입금 ${fmt(si)}</span><span style="color:var(--red)">출금 ${fmt(so)}</span><span style="color:var(--blue)">순유동 ${fmt(si-so)}</span>`;
-  }else sb.style.display='none';
+  // 계좌별 상세 원장
+  const ledgerBanks=selBank?[selBank]:[...new Set(periodTxs.map(t=>t.bank))];
+  document.getElementById('bank-ledger').innerHTML=ledgerBanks.map(b=>{
+    const bt=periodTxs.filter(t=>t.bank===b);
+    if(!bt.length)return'';
+    const is=bt.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
+    const os=bt.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
+    const prevBal=TXS.filter(t=>t.bank===b&&t.date<start).reduce((s,t)=>s+(t.type==='in'?t.amount:-t.amount),0);
+    let running=prevBal;
+    const rows=bt.map(t=>{
+      running+=(t.type==='in'?t.amount:-t.amount);
+      return`<tr>
+        <td style="white-space:nowrap;font-size:12px">${t.date}</td>
+        <td><span class="badge ${t.type}" style="font-size:10px">${t.type==='in'?'입금':'출금'}</span></td>
+        <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.name}">${t.name||'—'}</td>
+        <td>${t.cat?`<span class="tag" style="font-size:11px">${t.cat}</span>`:''}</td>
+        <td style="color:var(--text2);font-size:12px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.memo||''}</td>
+        <td style="text-align:right;font-weight:600;color:${t.type==='in'?'var(--green)':'var(--red)'}">
+          ${t.type==='in'?'+':'-'}${fmt(t.amount)}</td>
+        <td style="text-align:right;font-weight:600;font-size:12px;color:${running>=0?'var(--blue)':'var(--red)'}">
+          ${running<0?'-':''}${fmt(running)}</td>
+      </tr>`;
+    }).join('');
+    const finalBal=prevBal+is-os;
+    return`<div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+        <span style="font-size:15px;font-weight:700">🏦 ${b}</span>
+        <span style="font-size:12px;color:var(--text2)">${bt.length}건</span>
+        <span style="margin-left:auto;font-size:12px;color:var(--green)">입금 +${fmt(is)}</span>
+        <span style="font-size:12px;color:var(--red)">출금 -${fmt(os)}</span>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th>날짜</th><th style="width:55px">구분</th><th>거래처</th>
+            <th>계정과목</th><th>적요</th>
+            <th style="text-align:right">금액</th>
+            <th style="text-align:right">누계잔액</th>
+          </tr></thead>
+          <tbody>
+            <tr style="background:rgba(255,255,255,.03)">
+              <td colspan="5" style="font-size:12px;color:var(--text2)">${prevLabel}</td>
+              <td></td>
+              <td style="text-align:right;font-weight:600;color:${prevBal>=0?'var(--blue)':'var(--red)'}">
+                ${prevBal<0?'-':''}${fmt(prevBal)}</td>
+            </tr>
+            ${rows}
+          </tbody>
+        </table>
+        <div class="sum-row">
+          <span>합계</span>
+          <span style="color:var(--green)">입금 ${fmt(is)}</span>
+          <span style="color:var(--red)">출금 ${fmt(os)}</span>
+          <strong style="color:${finalBal>=0?'var(--green)':'var(--red)'}">${curLabel} ${finalBal<0?'-':''}${fmt(finalBal)}</strong>
+        </div>
+      </div>
+    </div>`;
+  }).join('')||'<div class="empty" style="margin-top:16px">선택한 조건의 거래 내역이 없습니다</div>';
 }
 
-// 카드 클릭 시 은행 필터 토글
 function filterByBank(b){
   const el=document.getElementById('b-bank');
   if(!el)return;
-  el.value=(el.value===b)?'':b; // 같은 은행 클릭하면 해제
+  el.value=(el.value===b)?'':b;
   renderBank();
 }
 
