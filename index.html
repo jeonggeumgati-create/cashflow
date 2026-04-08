@@ -1124,7 +1124,7 @@ function saveInline(id){
   const cls=ga(cat)?.cls||'';
   TXS[idx]={...TXS[idx],
     date: document.getElementById('ei-date-'+id)?.value||TXS[idx].date,
-    type: document.getElementById('ei-type-'+id)?.value||TXS[idx].type,
+    type: TXS[idx].type,
     bank: document.getElementById('ei-bank-'+id)?.value||TXS[idx].bank,
     name: document.getElementById('ei-name-'+id)?.value?.trim()||TXS[idx].name,
     cat, cls,
@@ -1140,9 +1140,14 @@ function delInline(id){
 
 // ── 은행별 렌더 (계좌 원장) ──────────────────────────────────────
 function renderBank(){
+  // selBank를 먼저 읽고 refreshFilters 후 복원
+  const _prevBank=document.getElementById('b-bank')?.value||'';
   refreshFilters();
+  // refreshFilters가 select innerHTML을 재작성하므로 값 복원
+  const _bsel=document.getElementById('b-bank');
+  if(_bsel&&_prevBank)_bsel.value=_prevBank;
   const{start,end}=getRange('b');
-  const selBank=document.getElementById('b-bank')?.value||'';
+  const selBank=_bsel?.value||'';
   const selType=document.getElementById('b-type')?.value||'';
   const prevLabel=bankVM==='daily'?'전일잔액':bankVM==='monthly'?'전월잔액':'기간전잔액';
   const curLabel=bankVM==='daily'?'금일잔액':bankVM==='monthly'?'금월잔액':'기간말잔액';
@@ -1267,10 +1272,10 @@ function getBankOB(bank){return OB[bank]||0;}
 function openOBModal(){
   const banks=[...new Set(TXS.map(t=>t.bank).filter(Boolean))].sort();
   document.getElementById('ob-list').innerHTML=banks.length
-    ? banks.map(b=>`
+    ? banks.map((b,i)=>`
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div style="font-size:13px;font-weight:500;min-width:160px;flex:1">${b}</div>
-          <input class="fi" type="number" id="ob-${CSS.escape(b)}" value="${OB[b]||0}"
+          <div style="font-size:13px;font-weight:500;flex:1">${b}</div>
+          <input class="fi" type="number" id="ob-input-${i}" value="${OB[b]||0}"
             placeholder="0" style="width:160px;text-align:right"
             data-bank="${b}">
           <span style="font-size:12px;color:var(--text2)">원</span>
@@ -1396,5 +1401,6 @@ if(TXS.length>0){document.getElementById('uzone').style.display='none';document.
 setVM('monthly',document.querySelectorAll('#page-dashboard .fbtn')[1]);
 setBVM('monthly',document.querySelectorAll('#page-bank .fbtn')[1]);
 </script>
+<datalist id="enl"></datalist>
 </body>
 </html>
