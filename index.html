@@ -188,7 +188,7 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
     <div>
       <div class="st">입금 내역</div>
       <div class="tw" id="tw-in">
-        <table><thead><tr><th>날짜</th><th>은행</th><th>거래처</th><th>계정과목</th><th style="text-align:right">금액</th><th>적요</th><th style="width:50px"></th></tr></thead>
+        <table><thead><tr><th>날짜</th><th>거래처</th><th>계정과목</th><th style="text-align:right">금액</th><th>은행</th><th>적요</th><th style="width:50px"></th></tr></thead>
         <tbody id="tb-in"></tbody></table>
         <div id="sum-in" class="sum-row" style="display:none"></div>
       </div>
@@ -197,7 +197,7 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
     <div>
       <div class="st">출금 내역</div>
       <div class="tw" id="tw-out">
-        <table><thead><tr><th>날짜</th><th>은행</th><th>거래처</th><th>계정과목</th><th style="text-align:right">금액</th><th>적요</th><th style="width:50px"></th></tr></thead>
+        <table><thead><tr><th>날짜</th><th>거래처</th><th>계정과목</th><th style="text-align:right">금액</th><th>은행</th><th>적요</th><th style="width:50px"></th></tr></thead>
         <tbody id="tb-out"></tbody></table>
         <div id="sum-out" class="sum-row" style="display:none"></div>
       </div>
@@ -1068,74 +1068,162 @@ function renderDash(){
       }).join('')||'<div style="font-size:12px;color:var(--text2)">—</div>'}
     </div>`;
 
-  // ── 인라인 편집 행 생성 ──
-  const catOpts='<option value="">미분류</option>'+ACCTS.map(a=>`<option value="${a.key}">${a.key}</option>`).join('');
-  const bankOpts=[...new Set(TXS.map(t=>t.bank).filter(Boolean))].map(b=>`<option value="${b}">${b}</option>`).join('');
+  // ── 인라인 편집: 계정과목·거래처·적요 3개만 편집 ──
+  // 계정과목 자동완성 목록 (등록된 계정과목 + 기존 거래에서 사용된 것)
+  const catNames=[...new Set([...ACCTS.map(a=>a.key),...TXS.map(t=>t.cat).filter(Boolean)])].sort();
 
+  // 편집 행: 계정과목 타이핑+자동완성, 거래처·적요 편집 / 나머지 읽기전용
   const makeEditRow=t=>`<tr class="editing" id="erow-${t.id}">
-    <td><input class="ie-input" id="ei-date-${t.id}" type="date" value="${t.date}" style="width:110px"></td>
-    <td><select class="ie-sel" id="ei-bank-${t.id}" style="width:100px">${bankOpts.replace(`value="${t.bank}"`,`value="${t.bank}" selected`)}</select></td>
-    <td><input class="ie-input" id="ei-name-${t.id}" value="${t.name||''}" placeholder="거래처" list="enl" style="width:100px"></td>
-    <td><select class="ie-sel" id="ei-cat-${t.id}" style="width:100px">${catOpts.replace(`value="${t.cat||''}"`,`value="${t.cat||''}" selected`)}</select></td>
-    <td><input class="ie-input" id="ei-amt-${t.id}" type="number" value="${t.amount}" style="width:100px;text-align:right"></td>
-    <td><input class="ie-input" id="ei-memo-${t.id}" value="${t.memo||''}" placeholder="적요" style="width:100px"></td>
-    <td style="white-space:nowrap;padding:4px 6px">
+    <td style="white-space:nowrap;font-size:12px;color:var(--text2)">${t.date}</td>
+    <td><input class="ie-input" id="ei-name-${t.id}" value="${(t.name||'').replace(/"/g,'&quot;')}" placeholder="거래처" list="enl" style="width:110px"></td>
+    <td>
+      <input class="ie-input" id="ei-cat-${t.id}"
+        value="${(t.cat||'').replace(/"/g,'&quot;')}"
+        placeholder="계정과목 입력..."
+        list="catlist-${t.id}"
+        style="width:130px"
+        oninput="onCatInput(this,'${t.id}')">
+      <datalist id="catlist-${t.id}">${catNames.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">`).join('')}</datalist>
+    </td>
+    <td style="text-align:right;font-weight:600;color:${t.type==='in'?'var(--green)':'var(--red)'};">${fmt(t.amount)}</td>
+    <td><span class="tag" style="font-size:11px">${t.bank||'—'}</span></td>
+    <td><input class="ie-input" id="ei-memo-${t.id}" value="${(t.memo||'').replace(/"/g,'&quot;')}" placeholder="적요" style="width:110px"></td>
+    <td style="white-space:nowrap;padding:4px 4px">
       <button class="ie-save" onclick="saveInline('${t.id}')">저장</button>
       <button class="ie-cancel" onclick="cancelInline('${t.id}')">취소</button>
       <button class="ie-del" onclick="delInline('${t.id}')">삭제</button>
     </td>
   </tr>`;
 
+  // 일반 행: 날짜·거래처·계정과목·금액·은행·적요 순서
   const makeRow=t=>`<tr id="row-${t.id}">
     <td style="white-space:nowrap;font-size:12px">${t.date}</td>
-    <td><span class="tag" style="font-size:11px">${t.bank||'—'}</span></td>
     <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.name}">${t.name||'—'}</td>
     <td>${t.cat?`<span class="tag">${t.cat}</span>`:'<span style="color:var(--gold);font-size:11px">미분류</span>'}</td>
     <td style="text-align:right;font-weight:600;color:${t.type==='in'?'var(--green)':'var(--red)'}">${fmt(t.amount)}</td>
+    <td><span class="tag" style="font-size:11px">${t.bank||'—'}</span></td>
     <td style="color:var(--text2);font-size:12px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.memo||''}">${t.memo||''}</td>
     <td><button class="edbtn" onclick="startInline('${t.id}')">편집</button></td>
   </tr>`;
 
+  // 전체 편집 모드: editingId==='ALL' 이면 모든 행 편집 상태
+  const isAllEdit = editingId==='ALL';
+
   // ── 입금/출금 분리 렌더 ──
-  document.getElementById('tb-in').innerHTML  = ins.length  ? ins.map(t=>t.id===editingId?makeEditRow(t):makeRow(t)).join('') : '';
-  document.getElementById('tb-out').innerHTML = outs.length ? outs.map(t=>t.id===editingId?makeEditRow(t):makeRow(t)).join('') : '';
+  document.getElementById('tb-in').innerHTML  = ins.length  ? ins.map(t=>(isAllEdit||t.id===editingId)?makeEditRow(t):makeRow(t)).join('') : '';
+  document.getElementById('tb-out').innerHTML = outs.length ? outs.map(t=>(isAllEdit||t.id===editingId)?makeEditRow(t):makeRow(t)).join('') : '';
 
   const si=document.getElementById('sum-in'),so=document.getElementById('sum-out');
-  if(ins.length){si.style.display='flex';si.innerHTML=`<span>합계</span><strong style="color:var(--green)">${fmt(ti)}</strong>`;}else si.style.display='none';
-  if(outs.length){so.style.display='flex';so.innerHTML=`<span>합계</span><strong style="color:var(--red)">${fmt(to)}</strong>`;}else so.style.display='none';
+  if(ins.length){
+    si.style.display='flex';
+    si.innerHTML=`<span>합계</span><strong style="color:var(--green)">${fmt(ti)}</strong>
+      <button class="edbtn" style="margin-left:auto;padding:2px 10px;font-size:12px;color:${isAllEdit?'var(--red)':'var(--blue)'}"
+        onclick="${isAllEdit?'cancelInline(\'ALL\')':'startInline(\'ALL\')'}">${isAllEdit?'✕ 편집 닫기':'✏ 전체 편집'}</button>`;
+  }else si.style.display='none';
+  if(outs.length){
+    so.style.display='flex';
+    so.innerHTML=`<span>합계</span><strong style="color:var(--red)">${fmt(to)}</strong>
+      <button class="edbtn" style="margin-left:auto;padding:2px 10px;font-size:12px;color:${isAllEdit?'var(--red)':'var(--blue)'}"
+        onclick="${isAllEdit?'cancelInline(\'ALL\')':'startInline(\'ALL\')'}">${isAllEdit?'✕ 편집 닫기':'✏ 전체 편집'}</button>`;
+  }else so.style.display='none';
 
-  document.getElementById('ei').style.display  = ins.length  ? 'none' : 'block';
+  // 전체 편집 모드 안내 배너
+  const existingBanner=document.getElementById('all-edit-banner');
+  if(isAllEdit&&!existingBanner){
+    const banner=document.createElement('div');
+    banner.id='all-edit-banner';
+    banner.style.cssText='background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.3);border-radius:8px;padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;font-size:13px;';
+    banner.innerHTML=`<span style="color:var(--green);font-weight:600">✏ 전체 편집 모드</span><span style="color:var(--text2)">거래처·계정과목·적요를 한번에 수정할 수 있어요</span><button class="btn pr" style="margin-left:auto;height:30px;padding:0 14px;font-size:12px" onclick="saveAllInline()">전체 저장</button><button class="btn" style="height:30px;padding:0 12px;font-size:12px" onclick="cancelInline('ALL')">취소</button>`;
+    document.getElementById('page-dashboard').insertBefore(banner, document.querySelector('#page-dashboard .grid2'));
+  }else if(!isAllEdit&&existingBanner){
+    existingBanner.remove();
+  }
   document.getElementById('eo').style.display  = outs.length ? 'none' : 'block';
   document.getElementById('tw-in').style.display  = ins.length  ? '' : 'none';
   document.getElementById('tw-out').style.display = outs.length ? '' : 'none';
+}
+
+// ── 계정과목 자동완성 헬퍼 ───────────────────────────────────────
+// 입력값과 일치하는 계정과목이 있으면 배경색으로 피드백
+function onCatInput(el, id){
+  const val=el.value.trim();
+  const matched=ACCTS.find(a=>a.key===val);
+  if(matched){
+    el.style.borderColor='var(--green)';
+    el.title=matched.cls?`분류: ${matched.cls}`:'';
+  } else if(val){
+    el.style.borderColor='var(--gold)'; // 새 계정과목
+    el.title='새 계정과목 (저장 시 자동 등록)';
+  } else {
+    el.style.borderColor='';
+    el.title='';
+  }
 }
 
 // ── 인라인 편집 함수 ─────────────────────────────────────────────
 function startInline(id){
   editingId=id;
   renderDash();
-  // 날짜 input에 포커스
-  setTimeout(()=>document.getElementById('ei-date-'+id)?.focus(),50);
+  if(id!=='ALL') setTimeout(()=>document.getElementById('ei-name-'+id)?.focus(),50);
 }
 function cancelInline(id){editingId=null;renderDash();}
+
 function saveInline(id){
   const idx=TXS.findIndex(t=>t.id===id);if(idx===-1)return;
-  const cat=document.getElementById('ei-cat-'+id)?.value||'';
-  const cls=ga(cat)?.cls||'';
+  const catVal=(document.getElementById('ei-cat-'+id)?.value||'').trim();
+  let cls='';
+  if(catVal){
+    const existing=ga(catVal);
+    if(existing){
+      cls=existing.cls||'';
+    } else {
+      // 새 계정과목 자동 등록
+      cls=TXS[idx].type==='in'?'수익':'비용';
+      ACCTS.push({key:catVal,cls,type:TXS[idx].type||'',kw:catVal,desc:'직접 입력'});
+      saveA();
+    }
+  }
   TXS[idx]={...TXS[idx],
-    date: document.getElementById('ei-date-'+id)?.value||TXS[idx].date,
-    type: TXS[idx].type,
-    bank: document.getElementById('ei-bank-'+id)?.value||TXS[idx].bank,
     name: document.getElementById('ei-name-'+id)?.value?.trim()||TXS[idx].name,
-    cat, cls,
-    amount: parseFloat(document.getElementById('ei-amt-'+id)?.value)||TXS[idx].amount,
-    memo:  document.getElementById('ei-memo-'+id)?.value?.trim()||'',
+    cat:catVal, cls,
+    memo: document.getElementById('ei-memo-'+id)?.value?.trim()||'',
   };
-  save();editingId=null;renderDash();refreshFilters();
+  save();
+  if(editingId!=='ALL') editingId=null;
+  renderDash();refreshFilters();
 }
+
+function saveAllInline(){
+  getFiltered().forEach(t=>{
+    const nameEl=document.getElementById('ei-name-'+t.id);
+    if(!nameEl)return;
+    const catVal=(document.getElementById('ei-cat-'+t.id)?.value||'').trim();
+    let cls='';
+    if(catVal){
+      const existing=ga(catVal);
+      if(existing){ cls=existing.cls||''; }
+      else{
+        cls=t.type==='in'?'수익':'비용';
+        if(!ACCTS.find(a=>a.key===catVal)){
+          ACCTS.push({key:catVal,cls,type:t.type||'',kw:catVal,desc:'직접 입력'});
+        }
+      }
+    }
+    const idx=TXS.findIndex(x=>x.id===t.id);
+    if(idx!==-1) TXS[idx]={...TXS[idx],
+      name:nameEl.value?.trim()||t.name, cat:catVal, cls,
+      memo:document.getElementById('ei-memo-'+t.id)?.value?.trim()||'',
+    };
+  });
+  saveA();save();editingId=null;renderDash();refreshFilters();
+  alert('✅ 전체 저장 완료');
+}
+
 function delInline(id){
   if(!confirm('이 거래를 삭제하시겠습니까?'))return;
-  TXS=TXS.filter(t=>t.id!==id);save();editingId=null;renderDash();refreshFilters();
+  TXS=TXS.filter(t=>t.id!==id);save();
+  if(editingId!=='ALL') editingId=null;
+  renderDash();refreshFilters();
 }
 
 // ── 은행별 렌더 (계좌 원장) ──────────────────────────────────────
