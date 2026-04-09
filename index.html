@@ -972,7 +972,7 @@ function refreshFilters(){
   const banks=[...new Set(TXS.map(t=>t.bank))];
   const cats=[...new Set(TXS.map(t=>t.cat).filter(Boolean))];
   const months=[...new Set(TXS.map(t=>t.date.slice(0,7)))].sort().reverse();
-  ['f-bank','b-bank'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">전체 은행</option>'+banks.map(b=>`<option>${b}</option>`).join('');});
+  ['f-bank','b-bank'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">전체 은행</option>'+banks.map(b=>`<option value="${b.replace(/"/g,'&quot;')}">${b}</option>`).join('');});
   const fc=document.getElementById('f-cat');if(fc)fc.innerHTML='<option value="">전체 계정과목</option>'+cats.map(c=>`<option>${c}</option>`).join('');
   ['c-month'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">전체 기간</option>'+months.map(m=>`<option>${m}</option>`).join('');});
   const nl=document.getElementById('enl');if(nl)nl.innerHTML=[...new Set(TXS.map(t=>t.name))].map(n=>`<option value="${n}">`).join('');
@@ -1140,14 +1140,16 @@ function delInline(id){
 
 // ── 은행별 렌더 (계좌 원장) ──────────────────────────────────────
 function renderBank(){
-  // selBank를 먼저 읽고 refreshFilters 후 복원
-  const _prevBank=document.getElementById('b-bank')?.value||'';
-  refreshFilters();
-  // refreshFilters가 select innerHTML을 재작성하므로 값 복원
-  const _bsel=document.getElementById('b-bank');
-  if(_bsel&&_prevBank)_bsel.value=_prevBank;
   const{start,end}=getRange('b');
-  const selBank=_bsel?.value||'';
+  // b-bank 옵션 직접 구성 (value 명시)
+  const allBankNames=[...new Set(TXS.map(t=>t.bank).filter(Boolean))].sort();
+  const bsel=document.getElementById('b-bank');
+  const selBank=bsel?.value||'';
+  if(bsel){
+    const prev=bsel.value;
+    bsel.innerHTML='<option value="">전체 계좌</option>'+allBankNames.map(b=>`<option value="${b}">${b}</option>`).join('');
+    bsel.value=prev; // 선택값 유지
+  }
   const selType=document.getElementById('b-type')?.value||'';
   const prevLabel=bankVM==='daily'?'전일잔액':bankVM==='monthly'?'전월잔액':'기간전잔액';
   const curLabel=bankVM==='daily'?'금일잔액':bankVM==='monthly'?'금월잔액':'기간말잔액';
@@ -1167,7 +1169,7 @@ function renderBank(){
     const curBal=prevBal+is-os;
     const isSelected=selBank===b;
     return`<div class="bcard" style="cursor:pointer;${isSelected?'border-color:var(--green);background:rgba(0,200,150,.06)':''}"
-      onclick="filterByBank('${b.replace(/'/g,"\\'").replace(/"/g,'\\"')}')">
+      onclick="filterByBank(this.getAttribute('data-bank'))" data-bank="${b.replace(/"/g,'&quot;')}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <span style="font-size:13px;font-weight:600">🏦 ${b}</span>
         ${isSelected?'<span style="font-size:11px;color:var(--green)">선택됨 ✓</span>':'<span style="font-size:11px;color:var(--text2)">'+bt.length+'건</span>'}
@@ -1256,9 +1258,7 @@ function renderBank(){
 function filterByBank(b){
   const el=document.getElementById('b-bank');
   if(!el)return;
-  // 은행명에 특수문자 있을 수 있으므로 option value와 정확히 비교
-  const cur=el.value;
-  el.value=(cur===b)?'':b;
+  el.value=(el.value===b)?'':b;
   renderBank();
 }
 
