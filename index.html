@@ -188,7 +188,7 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
     <div>
       <div class="st">입금 내역</div>
       <div class="tw" id="tw-in">
-        <table><thead><tr><th>날짜</th><th>거래처</th><th>계정과목</th><th style="text-align:right">금액</th><th>은행</th><th>적요</th><th style="width:50px"></th></tr></thead>
+        <table style="table-layout:fixed"><thead><tr><th style="width:82px">날짜</th><th style="width:18%">거래처</th><th style="width:18%">계정과목</th><th style="text-align:right;width:110px">금액</th><th style="width:15%">은행</th><th>적요</th><th style="width:50px"></th></tr></thead>
         <tbody id="tb-in"></tbody></table>
         <div id="sum-in" class="sum-row" style="display:none"></div>
       </div>
@@ -197,7 +197,7 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
     <div>
       <div class="st">출금 내역</div>
       <div class="tw" id="tw-out">
-        <table><thead><tr><th>날짜</th><th>거래처</th><th>계정과목</th><th style="text-align:right">금액</th><th>은행</th><th>적요</th><th style="width:50px"></th></tr></thead>
+        <table style="table-layout:fixed"><thead><tr><th style="width:82px">날짜</th><th style="width:18%">거래처</th><th style="width:18%">계정과목</th><th style="text-align:right;width:110px">금액</th><th style="width:15%">은행</th><th>적요</th><th style="width:50px"></th></tr></thead>
         <tbody id="tb-out"></tbody></table>
         <div id="sum-out" class="sum-row" style="display:none"></div>
       </div>
@@ -1098,12 +1098,12 @@ function renderDash(){
   // 일반 행: 날짜·거래처·계정과목·금액·은행·적요 순서
   const makeRow=t=>`<tr id="row-${t.id}">
     <td style="white-space:nowrap;font-size:12px">${t.date}</td>
-    <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.name}">${t.name||'—'}</td>
-    <td>${t.cat?`<span class="tag">${t.cat}</span>`:'<span style="color:var(--gold);font-size:11px">미분류</span>'}</td>
-    <td style="text-align:right;font-weight:600;color:${t.type==='in'?'var(--green)':'var(--red)'}">${fmt(t.amount)}</td>
-    <td><span class="tag" style="font-size:11px">${t.bank||'—'}</span></td>
-    <td style="color:var(--text2);font-size:12px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.memo||''}">${t.memo||''}</td>
-    <td><button class="edbtn" onclick="startInline('${t.id}')">편집</button></td>
+    <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.name}">${t.name||'—'}</td>
+    <td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.cat?`<span class="tag" style="white-space:nowrap;max-width:88px;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:middle">${t.cat}</span>`:'<span style="color:var(--gold);font-size:11px;white-space:nowrap">미분류</span>'}</td>
+    <td style="text-align:right;font-weight:600;white-space:nowrap;color:${t.type==='in'?'var(--green)':'var(--red)'}">${fmt(t.amount)}</td>
+    <td style="white-space:nowrap"><span class="tag" style="font-size:11px;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:middle">${t.bank||'—'}</span></td>
+    <td style="color:var(--text2);font-size:12px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.memo||''}">${t.memo||''}</td>
+    <td style="white-space:nowrap"><button class="edbtn" onclick="startInline('${t.id}')">편집</button></td>
   </tr>`;
 
   // 전체 편집 모드: editingId==='ALL' 이면 모든 행 편집 상태
