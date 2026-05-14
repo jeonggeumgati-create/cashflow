@@ -255,7 +255,10 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
 <div id="page-accounts" class="page">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
     <div class="st" style="margin-bottom:0">계정과목 관리</div>
-    <button class="btn pr" onclick="openNC()">+ 새 계정과목 추가</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn gold" onclick="resetAccounts()">↺ 기본 계정과목으로 초기화</button>
+      <button class="btn pr" onclick="openNC()">+ 새 계정과목 추가</button>
+    </div>
   </div>
   <div id="cat-manage"></div>
 </div>
@@ -721,7 +724,16 @@ const CR=[{key:'date',label:'날짜 *'},{key:'in',label:'입금액'},{key:'out',
 
 const SK='jajagm6-txs',AK='jajagm6-accts',BAK='jajagm6-bankaccts';
 let TXS=JSON.parse(localStorage.getItem(SK)||'[]');
-let ACCTS=JSON.parse(localStorage.getItem(AK)||JSON.stringify(DEFAULT_ACCOUNTS));
+// 저장된 계정과목 로드 + 새 기본 계정과목 자동 병합
+let ACCTS=(()=>{
+  const saved=JSON.parse(localStorage.getItem(AK)||'[]');
+  if(!saved.length) return [...DEFAULT_ACCOUNTS];
+  // 새로 추가된 기본 계정과목 병합 (기존 키 유지, 없는 것만 추가)
+  const savedKeys=new Set(saved.map(a=>a.key));
+  const merged=[...saved];
+  DEFAULT_ACCOUNTS.forEach(a=>{ if(!savedKeys.has(a.key)) merged.push(a); });
+  return merged;
+})();
 // 계좌 등록 데이터 (사용자 계좌 목록)
 const DEFAULT_BANK_ACCOUNTS=[
   {id:'ba1', bank:'국민은행',        acct:'434701-01-273014', display:'국민은행 (3014)', memo:''},
@@ -1733,7 +1745,14 @@ function renderCharts(){
   rcl(ib,'cat-in-list','var(--green)');rcl(ob,'cat-out-list','var(--red)');
 }
 
-// ── 계정과목 관리 ────────────────────────────────────────────────
+// ── 계정과목 관리 ─────────────────────────────────────────────
+function resetAccounts(){
+  if(!confirm('기본 계정과목(121개)으로 초기화할까요?\n직접 추가한 계정과목은 유지됩니다.'))return;
+  const defaultKeys=new Set(DEFAULT_ACCOUNTS.map(a=>a.key));
+  ACCTS=[...DEFAULT_ACCOUNTS,...ACCTS.filter(a=>!defaultKeys.has(a.key))];
+  saveA();renderAccPage();refreshFilters();
+  alert('✅ 기본 계정과목 '+DEFAULT_ACCOUNTS.length+'개로 초기화됐습니다.');
+}
 function renderAccPage(){
   const clsList=['자산','부채','자본','수익','비용'];
   document.getElementById('cat-manage').innerHTML=clsList.map(cls=>{
