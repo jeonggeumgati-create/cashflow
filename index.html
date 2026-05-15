@@ -130,6 +130,10 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
 .tw tr.editing td{white-space:normal;overflow:visible}
 .CHART_COLORS{color:var(--green)}
 @media(max-width:640px){.grid4{grid-template-columns:repeat(2,1fr)}.grid3{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.bpicker{grid-template-columns:repeat(2,1fr)}.header{padding:0 12px}.main{padding:12px}.tabs{padding:0 6px}}
+
+.upload-card-zone{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:.2s}
+.upload-card-zone:hover,.upload-card-zone.uz-hover{border-color:var(--green);background:rgba(0,200,150,.05)}
+.upload-card-zone.done{border-color:var(--green);background:rgba(0,200,150,.08);border-style:solid}
 </style>
 </head>
 <body>
@@ -157,18 +161,158 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
 
 <!-- 업로드 -->
 <div id="page-upload" class="page active">
-  <div class="uz" id="uzone" onclick="document.getElementById('fI').click()">
-    <div style="font-size:42px">📂</div>
-    <div style="font-size:17px;font-weight:600;margin:12px 0 8px">은행 거래내역 엑셀을 업로드하세요</div>
-    <div style="font-size:13px;color:var(--text2);line-height:1.8">국민 · 기업 · 신한 · 하나 · 우리 · 농협 · 카카오 · 토스 등<br>클릭하거나 파일을 끌어다 놓으세요</div>
-  </div>
-  <div id="ulist" style="display:none;margin-top:20px">
-    <div class="st">업로드된 파일</div>
-    <div id="fcards" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
-    <div style="display:flex;gap:10px;margin-bottom:24px">
-      <label class="btn pr" for="fI" style="display:inline-flex;align-items:center;cursor:pointer">+ 파일 추가</label>
-      <button class="btn dg" onclick="clearAll()">전체 삭제</button>
+
+  <!-- 헤더 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <div>
+      <div style="font-size:18px;font-weight:700">그랜터 데이터 연동</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:3px">그랜터에서 엑셀을 다운로드해서 올려주세요</div>
     </div>
+    <a href="https://app.granter.biz" target="_blank"
+      style="background:rgba(201,122,244,.15);color:#c97af4;border:1px solid rgba(201,122,244,.3);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none">
+      🟣 그랜터 열기 →
+    </a>
+  </div>
+
+  <!-- 4개 업로드 카드 -->
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:24px">
+
+    <!-- 계좌 거래내역 -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div style="font-size:24px">🏦</div>
+        <div>
+          <div style="font-size:14px;font-weight:600">계좌 거래내역</div>
+          <div style="font-size:11px;color:var(--text2)">그랜터 자금일보 → 엑셀 내보내기</div>
+        </div>
+        <div id="badge-tx" style="margin-left:auto;display:none;background:rgba(0,200,150,.15);color:var(--green);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px"></div>
+      </div>
+      <div class="upload-card-zone" id="zone-tx"
+        onclick="document.getElementById('fi-tx').click()"
+        ondragover="event.preventDefault();this.classList.add('uz-hover')"
+        ondragleave="this.classList.remove('uz-hover')"
+        ondrop="event.preventDefault();this.classList.remove('uz-hover');handleGranterType('tx',event.dataTransfer.files)">
+        <div style="font-size:20px">📂</div>
+        <div style="font-size:12px;margin-top:6px;color:var(--text2)">클릭 또는 드래그</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">계좌_전체_*.xlsx</div>
+      </div>
+      <input type="file" id="fi-tx" accept=".xlsx,.xls,.csv" multiple style="display:none"
+        onchange="handleGranterType('tx',this.files);this.value=''">
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--text2);background:rgba(0,200,150,.08);padding:2px 7px;border-radius:4px">✓ 입출금 자동분류</span>
+        <span style="font-size:11px;color:var(--text2);background:rgba(0,200,150,.08);padding:2px 7px;border-radius:4px">✓ 계정과목 import</span>
+        <span style="font-size:11px;color:var(--text2);background:rgba(0,200,150,.08);padding:2px 7px;border-radius:4px">✓ 중복방지</span>
+      </div>
+    </div>
+
+    <!-- 세금계산서 -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div style="font-size:24px">🧾</div>
+        <div>
+          <div style="font-size:14px;font-weight:600">세금계산서 · 계산서</div>
+          <div style="font-size:11px;color:var(--text2)">그랜터 세금계산서 → 엑셀 내보내기</div>
+        </div>
+        <div id="badge-inv" style="margin-left:auto;display:none;background:rgba(74,158,255,.15);color:var(--blue);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px"></div>
+      </div>
+      <div class="upload-card-zone" id="zone-inv"
+        onclick="document.getElementById('fi-inv').click()"
+        ondragover="event.preventDefault();this.classList.add('uz-hover')"
+        ondragleave="this.classList.remove('uz-hover')"
+        ondrop="event.preventDefault();this.classList.remove('uz-hover');handleGranterType('inv',event.dataTransfer.files)">
+        <div style="font-size:20px">📂</div>
+        <div style="font-size:12px;margin-top:6px;color:var(--text2)">클릭 또는 드래그</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">세금계산서_*.xlsx</div>
+      </div>
+      <input type="file" id="fi-inv" accept=".xlsx,.xls,.csv" multiple style="display:none"
+        onchange="handleGranterType('inv',this.files);this.value=''">
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--text2);background:rgba(74,158,255,.08);padding:2px 7px;border-radius:4px">✓ 매출/매입 자동구분</span>
+        <span style="font-size:11px;color:var(--text2);background:rgba(74,158,255,.08);padding:2px 7px;border-radius:4px">✓ 공급가액·세액 분리</span>
+      </div>
+    </div>
+
+    <!-- 법인카드 -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div style="font-size:24px">💳</div>
+        <div>
+          <div style="font-size:14px;font-weight:600">법인카드</div>
+          <div style="font-size:11px;color:var(--text2)">그랜터 법인카드 → 엑셀 내보내기</div>
+        </div>
+        <div id="badge-card" style="margin-left:auto;display:none;background:rgba(240,180,41,.15);color:var(--gold);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px"></div>
+      </div>
+      <div class="upload-card-zone" id="zone-card"
+        onclick="document.getElementById('fi-card').click()"
+        ondragover="event.preventDefault();this.classList.add('uz-hover')"
+        ondragleave="this.classList.remove('uz-hover')"
+        ondrop="event.preventDefault();this.classList.remove('uz-hover');handleGranterType('card',event.dataTransfer.files)">
+        <div style="font-size:20px">📂</div>
+        <div style="font-size:12px;margin-top:6px;color:var(--text2)">클릭 또는 드래그</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">법인카드_*.xlsx</div>
+      </div>
+      <input type="file" id="fi-card" accept=".xlsx,.xls,.csv" multiple style="display:none"
+        onchange="handleGranterType('card',this.files);this.value=''">
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--text2);background:rgba(240,180,41,.08);padding:2px 7px;border-radius:4px">✓ 카드사·번호 자동인식</span>
+        <span style="font-size:11px;color:var(--text2);background:rgba(240,180,41,.08);padding:2px 7px;border-radius:4px">✓ 매출/매입 구분</span>
+      </div>
+    </div>
+
+    <!-- 현금영수증 -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div style="font-size:24px">🧾</div>
+        <div>
+          <div style="font-size:14px;font-weight:600">현금영수증</div>
+          <div style="font-size:11px;color:var(--text2)">그랜터 현금영수증 → 엑셀 내보내기</div>
+        </div>
+        <div id="badge-rc" style="margin-left:auto;display:none;background:rgba(255,94,94,.15);color:var(--red);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px"></div>
+      </div>
+      <div class="upload-card-zone" id="zone-rc"
+        onclick="document.getElementById('fi-rc').click()"
+        ondragover="event.preventDefault();this.classList.add('uz-hover')"
+        ondragleave="this.classList.remove('uz-hover')"
+        ondrop="event.preventDefault();this.classList.remove('uz-hover');handleGranterType('rc',event.dataTransfer.files)">
+        <div style="font-size:20px">📂</div>
+        <div style="font-size:12px;margin-top:6px;color:var(--text2)">클릭 또는 드래그</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">현금영수증_*.xlsx</div>
+      </div>
+      <input type="file" id="fi-rc" accept=".xlsx,.xls,.csv" multiple style="display:none"
+        onchange="handleGranterType('rc',this.files);this.value=''">
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--text2);background:rgba(255,94,94,.08);padding:2px 7px;border-radius:4px">✓ 매출/매입 자동구분</span>
+        <span style="font-size:11px;color:var(--text2);background:rgba(255,94,94,.08);padding:2px 7px;border-radius:4px">✓ 공급가액·세액 분리</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 또는 일반 은행 업로드 -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <div style="height:1px;flex:1;background:var(--border)"></div>
+    <div style="font-size:12px;color:var(--text2);white-space:nowrap">또는 은행 직접 업로드</div>
+    <div style="height:1px;flex:1;background:var(--border)"></div>
+  </div>
+  <div class="uz" id="uzone" onclick="document.getElementById('fI').click()"
+    ondragover="event.preventDefault();this.classList.add('drag')"
+    ondragleave="this.classList.remove('drag')"
+    ondrop="event.preventDefault();this.classList.remove('drag');handleFiles(Array.from(event.dataTransfer.files))"
+    style="padding:20px;border-radius:12px">
+    <div style="font-size:24px">🏦</div>
+    <div style="font-size:14px;font-weight:600;margin:8px 0 4px">국민 · 기업 · 신한 · 하나 · 우리 · 농협 등</div>
+    <div style="font-size:12px;color:var(--text2)">각 은행에서 직접 다운로드한 거래내역 파일</div>
+  </div>
+  <input type="file" id="fI" accept=".xlsx,.xls,.csv" multiple style="display:none"
+    onchange="handleFiles(Array.from(this.files));this.value=''">
+
+  <!-- 업로드된 데이터 현황 -->
+  <div id="ulist" style="display:none;margin-top:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="st" style="margin:0">📊 업로드된 데이터 현황</div>
+      <button class="btn dg" onclick="clearAll()" style="height:30px;font-size:12px">전체 삭제</button>
+    </div>
+    <div id="fcards" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
     <div id="txprev"></div>
   </div>
 </div>
@@ -266,88 +410,64 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
 
 <!-- 세금계산서 -->
 <div id="page-invoice" class="page">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-    <div style="display:flex;gap:8px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;gap:6px">
       <button class="fbtn active" id="inv-tab-out" onclick="setInvTab('out',this)">📤 매출(발행)</button>
       <button class="fbtn" id="inv-tab-in" onclick="setInvTab('in',this)">📥 매입(수취)</button>
     </div>
-    <button class="btn pr" onclick="openInvModal()">+ 추가</button>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn" onclick="dlTemplate('inv')" style="font-size:12px">📥 양식</button>
+      <label class="btn gold" style="cursor:pointer;font-size:12px">📂 엑셀 업로드<input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="uploadExcel(this,'inv')"></label>
+      <button class="btn pr" onclick="openInvModal()" style="font-size:12px">+ 직접 추가</button>
+    </div>
   </div>
-  <div class="grid3" id="inv-summary" style="margin-bottom:16px"></div>
-  <div class="tw">
-    <table style="table-layout:fixed">
-      <thead><tr>
-        <th style="width:90px">일자</th>
-        <th style="width:70px">종류</th>
-        <th>거래처</th>
-        <th style="text-align:right;width:120px">공급가액</th>
-        <th style="text-align:right;width:100px">세액</th>
-        <th style="text-align:right;width:120px">합계</th>
-        <th>계정과목</th>
-        <th>적요</th>
-        <th style="width:50px"></th>
-      </tr></thead>
-      <tbody id="tb-inv"></tbody>
-    </table>
-    <div id="sum-inv" class="sum-row" style="display:none"></div>
-  </div>
+  <div class="grid3" id="inv-summary" style="margin-bottom:14px"></div>
+  <div class="tw"><table style="table-layout:fixed"><thead><tr>
+    <th style="width:82px">작성일자</th><th style="width:60px">종류</th>
+    <th style="width:14%">거래처명</th><th style="width:11%">사업자번호</th>
+    <th style="width:12%">품목</th>
+    <th style="text-align:right;width:105px">공급가액</th>
+    <th style="text-align:right;width:85px">세액</th>
+    <th style="text-align:right;width:105px">합계</th>
+    <th>비고</th><th style="width:38px"></th>
+  </tr></thead><tbody id="tb-inv"></tbody></table>
+  <div id="sum-inv" class="sum-row" style="display:none"></div></div>
 </div>
-
 <!-- 법인카드 -->
 <div id="page-card" class="page">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-    <div class="filters" style="margin:0">
-      <button class="fbtn active" onclick="setCardVM('monthly',this)">월별</button>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="fbtn active" id="card-tab-out" onclick="setCardTab('out',this)">📤 매출</button>
+      <button class="fbtn" id="card-tab-in" onclick="setCardTab('in',this)">📥 매입</button>
+      <button class="fbtn" onclick="setCardVM('monthly',this)">월별</button>
       <button class="fbtn" onclick="setCardVM('custom',this)">기간지정</button>
       <div id="cd-dfilters"></div>
-      <select class="fi" id="cd-card" onchange="renderCard()"><option value="">전체 카드</option></select>
     </div>
-    <button class="btn pr" onclick="openCardModal()">+ 추가</button>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn" onclick="dlTemplate('card')" style="font-size:12px">📥 양식</button>
+      <label class="btn gold" style="cursor:pointer;font-size:12px">📂 엑셀 업로드<input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="uploadExcel(this,'card')"></label>
+      <button class="btn pr" onclick="openCardModal()" style="font-size:12px">+ 직접 추가</button>
+    </div>
   </div>
-  <div class="grid4" id="card-summary" style="margin-bottom:16px"></div>
-  <div class="tw">
-    <table style="table-layout:fixed">
-      <thead><tr>
-        <th style="width:90px">일자</th>
-        <th>카드명</th>
-        <th>가맹점</th>
-        <th style="text-align:right;width:120px">금액</th>
-        <th>계정과목</th>
-        <th>적요</th>
-        <th style="width:50px"></th>
-      </tr></thead>
-      <tbody id="tb-card"></tbody>
-    </table>
-    <div id="sum-card" class="sum-row" style="display:none"></div>
-  </div>
+  <div class="grid4" id="card-summary" style="margin-bottom:14px"></div>
+  <div id="card-table-wrap"></div>
 </div>
-
 <!-- 현금영수증 -->
 <div id="page-receipt" class="page">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-    <div style="display:flex;gap:8px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;gap:6px">
       <button class="fbtn active" id="rc-tab-out" onclick="setRcTab('out',this)">📤 매출(발행)</button>
       <button class="fbtn" id="rc-tab-in" onclick="setRcTab('in',this)">📥 매입(수취)</button>
     </div>
-    <button class="btn pr" onclick="openRcModal()">+ 추가</button>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn" onclick="dlTemplate('rc')" style="font-size:12px">📥 양식</button>
+      <label class="btn gold" style="cursor:pointer;font-size:12px">📂 엑셀 업로드<input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="uploadExcel(this,'rc')"></label>
+      <button class="btn pr" onclick="openRcModal()" style="font-size:12px">+ 직접 추가</button>
+    </div>
   </div>
-  <div class="grid3" id="rc-summary" style="margin-bottom:16px"></div>
-  <div class="tw">
-    <table style="table-layout:fixed">
-      <thead><tr>
-        <th style="width:90px">일자</th>
-        <th>거래처</th>
-        <th style="text-align:right;width:120px">금액</th>
-        <th>계정과목</th>
-        <th>적요</th>
-        <th style="width:50px"></th>
-      </tr></thead>
-      <tbody id="tb-rc"></tbody>
-    </table>
-    <div id="sum-rc" class="sum-row" style="display:none"></div>
-  </div>
+  <div class="grid3" id="rc-summary" style="margin-bottom:14px"></div>
+  <div id="rc-table-wrap"></div>
 </div>
-
 <!-- 계좌 설정 -->
 <div id="page-bankset" class="page">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
@@ -456,19 +576,20 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
 
 <!-- 세금계산서 모달 -->
 <div class="modal-bg" id="invModal">
-  <div class="modal modal-sm">
+  <div class="modal" style="width:520px">
     <h2 id="inv-modal-title">세금계산서 추가</h2>
     <input type="hidden" id="inv-ek">
-    <div class="fr"><label>일자 *</label><input type="date" id="inv-date"></div>
-    <div class="fr"><label>종류</label>
-      <select id="inv-doctype"><option value="세금계산서">세금계산서</option><option value="계산서">계산서</option></select>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fr"><label>작성일자 *</label><input type="date" id="inv-date"></div>
+      <div class="fr"><label>종류</label><select id="inv-doctype"><option value="세금계산서">세금계산서</option><option value="계산서">계산서</option></select></div>
+      <div class="fr"><label>거래처명</label><input type="text" id="inv-partner" list="enl" placeholder="거래처명"></div>
+      <div class="fr"><label>사업자등록번호</label><input type="text" id="inv-bizno" placeholder="000-00-00000"></div>
+      <div class="fr" style="grid-column:1/-1"><label>품목</label><input type="text" id="inv-item" placeholder="품목명"></div>
+      <div class="fr"><label>공급가액</label><input type="number" id="inv-supply" oninput="calcInvTax()"></div>
+      <div class="fr"><label>세액</label><input type="number" id="inv-tax" oninput="calcInvTotal()"></div>
+      <div class="fr"><label>합계</label><input type="number" id="inv-total" readonly style="opacity:.7"></div>
+      <div class="fr"><label>비고</label><input type="text" id="inv-memo" placeholder="비고"></div>
     </div>
-    <div class="fr"><label>거래처</label><input type="text" id="inv-partner" list="enl" placeholder="거래처명"></div>
-    <div class="fr"><label>공급가액 (원)</label><input type="number" id="inv-supply" oninput="calcInvTax()"></div>
-    <div class="fr"><label>세액 (원)</label><input type="number" id="inv-tax" oninput="calcInvTotal()"></div>
-    <div class="fr"><label>합계 (원)</label><input type="number" id="inv-total" readonly style="opacity:.7"></div>
-    <div class="fr"><label>계정과목</label><input type="text" id="inv-cat" list="inv-catlist" placeholder="계정과목" oninput="onCatInput(this)"><datalist id="inv-catlist"></datalist></div>
-    <div class="fr"><label>적요</label><input type="text" id="inv-memo" placeholder="메모"></div>
     <div class="fa">
       <button class="btn dg" id="inv-del-btn" style="margin-right:auto;display:none" onclick="deleteInv(document.getElementById('inv-ek').value)">삭제</button>
       <button class="btn" onclick="closeInvModal()">취소</button>
@@ -476,18 +597,36 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
     </div>
   </div>
 </div>
-
 <!-- 법인카드 모달 -->
 <div class="modal-bg" id="cardModal">
-  <div class="modal modal-sm">
-    <h2 id="card-modal-title">법인카드 내역 추가</h2>
+  <div class="modal" style="width:560px">
+    <h2 id="card-modal-title">법인카드 추가</h2>
     <input type="hidden" id="card-ek">
-    <div class="fr"><label>일자 *</label><input type="date" id="card-date"></div>
-    <div class="fr"><label>카드명</label><input type="text" id="card-name" placeholder="예: 국민카드 법인" list="card-namelist"><datalist id="card-namelist"></datalist></div>
-    <div class="fr"><label>가맹점</label><input type="text" id="card-merchant" list="enl" placeholder="가맹점명"></div>
-    <div class="fr"><label>금액 (원) *</label><input type="number" id="card-amount"></div>
-    <div class="fr"><label>계정과목</label><input type="text" id="card-cat" list="card-catlist" placeholder="계정과목" oninput="onCatInput(this)"><datalist id="card-catlist"></datalist></div>
-    <div class="fr"><label>적요</label><input type="text" id="card-memo" placeholder="메모"></div>
+    <input type="hidden" id="card-subtype">
+    <div id="card-fields-out" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fr" style="grid-column:1/-1"><div style="font-size:12px;color:var(--text2);background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.2);border-radius:6px;padding:6px 10px">📤 매출 — 법인카드로 결제받은 내역</div></div>
+      <div class="fr"><label>사용일자 *</label><input type="date" id="card-date"></div>
+      <div class="fr"><label>매출처명</label><input type="text" id="card-partner" list="enl" placeholder="매출처명"></div>
+      <div class="fr"><label>사업자등록번호</label><input type="text" id="card-bizno" placeholder="000-00-00000"></div>
+      <div class="fr"><label>공급가액</label><input type="number" id="card-supply" oninput="calcCardTax()"></div>
+      <div class="fr"><label>세액</label><input type="number" id="card-tax" oninput="calcCardTotal()"></div>
+      <div class="fr"><label>합계</label><input type="number" id="card-total" readonly style="opacity:.7"></div>
+      <div class="fr" style="grid-column:1/-1"><label>비고</label><input type="text" id="card-memo"></div>
+    </div>
+    <div id="card-fields-in" style="display:none;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fr" style="grid-column:1/-1"><div style="font-size:12px;color:var(--gold);background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.2);border-radius:6px;padding:6px 10px">📥 매입 — 법인카드로 구매한 내역</div></div>
+      <div class="fr"><label>사용일자 *</label><input type="date" id="card-date-in"></div>
+      <div class="fr"><label>법인카드회사</label><input type="text" id="card-company" placeholder="예: 국민카드" list="card-namelist"><datalist id="card-namelist"></datalist></div>
+      <div class="fr"><label>카드번호 뒤4자리</label><input type="text" id="card-last4" placeholder="1234" maxlength="4"></div>
+      <div class="fr"><label>보유자</label><input type="text" id="card-holder" placeholder="카드 보유자"></div>
+      <div class="fr"><label>사용자</label><input type="text" id="card-user" placeholder="실제 사용자"></div>
+      <div class="fr"><label>거래처명</label><input type="text" id="card-merchant" list="enl" placeholder="가맹점명"></div>
+      <div class="fr"><label>사업자등록번호</label><input type="text" id="card-bizno-in" placeholder="000-00-00000"></div>
+      <div class="fr"><label>공급가액</label><input type="number" id="card-supply-in" oninput="calcCardTaxIn()"></div>
+      <div class="fr"><label>세액</label><input type="number" id="card-tax-in" oninput="calcCardTotalIn()"></div>
+      <div class="fr"><label>합계</label><input type="number" id="card-total-in" readonly style="opacity:.7"></div>
+      <div class="fr" style="grid-column:1/-1"><label>비고</label><input type="text" id="card-memo-in"></div>
+    </div>
     <div class="fa">
       <button class="btn dg" id="card-del-btn" style="margin-right:auto;display:none" onclick="deleteCard(document.getElementById('card-ek').value)">삭제</button>
       <button class="btn" onclick="closeCardModal()">취소</button>
@@ -495,17 +634,31 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
     </div>
   </div>
 </div>
-
 <!-- 현금영수증 모달 -->
 <div class="modal-bg" id="rcModal">
-  <div class="modal modal-sm">
+  <div class="modal" style="width:520px">
     <h2 id="rc-modal-title">현금영수증 추가</h2>
     <input type="hidden" id="rc-ek">
-    <div class="fr"><label>일자 *</label><input type="date" id="rc-date"></div>
-    <div class="fr"><label>거래처</label><input type="text" id="rc-partner" list="enl" placeholder="거래처명"></div>
-    <div class="fr"><label>금액 (원) *</label><input type="number" id="rc-amount"></div>
-    <div class="fr"><label>계정과목</label><input type="text" id="rc-cat" list="rc-catlist" placeholder="계정과목" oninput="onCatInput(this)"><datalist id="rc-catlist"></datalist></div>
-    <div class="fr"><label>적요</label><input type="text" id="rc-memo" placeholder="메모"></div>
+    <div id="rc-fields-out" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fr" style="grid-column:1/-1"><div style="font-size:12px;color:var(--text2);background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.2);border-radius:6px;padding:6px 10px">📤 매출 — 발행한 현금영수증</div></div>
+      <div class="fr"><label>사용일자 *</label><input type="date" id="rc-date-out"></div>
+      <div class="fr"><label>매출처명</label><input type="text" id="rc-partner-out" list="enl" placeholder="매출처명"></div>
+      <div class="fr"><label>사업자등록번호</label><input type="text" id="rc-bizno-out" placeholder="000-00-00000"></div>
+      <div class="fr"><label>공급가액</label><input type="number" id="rc-supply-out" oninput="calcRcTax('out')"></div>
+      <div class="fr"><label>세액</label><input type="number" id="rc-tax-out" oninput="calcRcTotal('out')"></div>
+      <div class="fr"><label>합계</label><input type="number" id="rc-total-out" readonly style="opacity:.7"></div>
+      <div class="fr" style="grid-column:1/-1"><label>비고</label><input type="text" id="rc-memo-out"></div>
+    </div>
+    <div id="rc-fields-in" style="display:none;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fr" style="grid-column:1/-1"><div style="font-size:12px;color:var(--gold);background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.2);border-radius:6px;padding:6px 10px">📥 매입 — 수취한 현금영수증</div></div>
+      <div class="fr"><label>사용일자 *</label><input type="date" id="rc-date-in"></div>
+      <div class="fr"><label>거래처명</label><input type="text" id="rc-partner-in" list="enl" placeholder="거래처명"></div>
+      <div class="fr"><label>사업자등록번호</label><input type="text" id="rc-bizno-in" placeholder="000-00-00000"></div>
+      <div class="fr"><label>공급가액</label><input type="number" id="rc-supply-in" oninput="calcRcTax('in')"></div>
+      <div class="fr"><label>세액</label><input type="number" id="rc-tax-in" oninput="calcRcTotal('in')"></div>
+      <div class="fr"><label>합계</label><input type="number" id="rc-total-in" readonly style="opacity:.7"></div>
+      <div class="fr" style="grid-column:1/-1"><label>비고</label><input type="text" id="rc-memo-in"></div>
+    </div>
     <div class="fa">
       <button class="btn dg" id="rc-del-btn" style="margin-right:auto;display:none" onclick="deleteRc(document.getElementById('rc-ek').value)">삭제</button>
       <button class="btn" onclick="closeRcModal()">취소</button>
@@ -513,7 +666,6 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
     </div>
   </div>
 </div>
-
 <!-- 기초잔액 설정 모달 -->
 <div class="modal-bg" id="obModal">
   <div class="modal" style="width:480px">
@@ -1060,11 +1212,279 @@ function deleteBA(id){
 }
 
 // ── 파일 업로드 ──────────────────────────────────────────────────
-document.getElementById('fI').addEventListener('change',function(e){handleFiles(Array.from(e.target.files));this.value='';});
-const uz=document.getElementById('uzone');
-uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag');});
-uz.addEventListener('dragleave',()=>uz.classList.remove('drag'));
-uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('drag');handleFiles(Array.from(e.dataTransfer.files));});
+// 드래그앤드롭은 HTML inline onchange/ondrop으로 처리
+
+// ══════════════════════════════════════════════════════════════
+// 그랜터 파일 핸들러
+// ══════════════════════════════════════════════════════════════
+function handleGranterDrop(e){
+  handleGranterFiles({files: e.dataTransfer.files});
+}
+function handleGranterFiles(inp){
+  const files = Array.from(inp.files||[]);
+  if(!files.length)return;
+  // 그랜터 파일은 직접 granter 프리셋으로 처리
+  files.forEach(f=>{
+    const r=new FileReader();
+    r.onload=function(e){
+      try{
+        const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+        let hi=0;
+        for(let i=0;i<Math.min(15,raw.length);i++){if(raw[i].filter(c=>String(c).trim()).length>=3){hi=i;break;}}
+        const hdrs=raw[hi].map(h=>String(h).trim());
+        const rows=raw.slice(hi+1).filter(r=>r.some(c=>String(c).trim()));
+
+        // 그랜터 컬럼 자동 감지
+        const fi=pats=>{for(const p of pats){const i=hdrs.findIndex(h=>p.test(h));if(i!==-1)return i;}return-1;};
+        const dc=fi([/^일시$/i,/일자/i,/날짜/i]);
+        const amtc=fi([/^금액$/i]);
+        const namec=fi([/^사용처$/i,/거래처/i]);
+        const memc=fi([/^사유$/i,/메모/i,/비고/i]);
+        const catc=fi([/^계정과목$/i]);
+        const bankc=fi([/^거래수단$/i]);
+
+        if(dc===-1||amtc===-1){
+          alert(`"${f.name}"은 그랜터 형식이 아닌 것 같아요.
+[일시], [금액] 컬럼을 찾을 수 없어요.
+일반 업로드를 이용해주세요.`);
+          return;
+        }
+
+        // 중복 체크용 기존 키 목록
+        const existingKeys=new Set(TXS.map(t=>`${t.date}|${t.bank}|${t.amount}|${t.type}`));
+
+        let added=0, skipped=0;
+        rows.forEach(row=>{
+          const rawAmt=parseFloat(String(row[amtc]||0).replace(/[^0-9.-]/g,''))||0;
+          if(rawAmt===0)return;
+          const type=rawAmt>0?'in':'out';
+          const amount=Math.abs(rawAmt);
+          const rawBank=bankc!==-1?String(row[bankc]||'').trim():'그랜터';
+          const bank=cleanGranterBank(rawBank)||'그랜터';
+
+          // 날짜 파싱 (ISO 형식 포함)
+          let ds='';
+          const rv=row[dc];
+          if(rv instanceof Date)ds=rv.toISOString().slice(0,10);
+          else{const s=String(rv||'').replace(/T.*/,'').replace(/[./]/g,'-').replace(/\s.*/,'');const m=s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)ds=`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;else return;}
+
+          // 중복 방지
+          const key=`${ds}|${bank}|${amount}|${type}`;
+          if(existingKeys.has(key)){skipped++;return;}
+          existingKeys.add(key);
+
+          const name=namec!==-1?String(row[namec]||'').trim():(type==='in'?'입금':'출금');
+          const memo=memc!==-1?String(row[memc]||'').trim():'';
+          const granterCat=catc!==-1?String(row[catc]||'').trim():'';
+
+          const t={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5)+added,
+            date:ds,type,bank,name,cat:'',cls:'',amount,memo};
+
+          if(granterCat&&granterCat!=='단순이체'){
+            const acct=ensureGranterCat(granterCat,type);
+            t.cat=acct.key;t.cls=acct.cls||gCls(granterCat);
+          }else if(!granterCat){
+            const m=autoMatch(t);if(m){t.cat=m.key;t.cls=m.cls;}
+          }
+          TXS.push(t);added++;
+        });
+
+        save();
+        refreshFilters();renderUList();
+        document.getElementById('ulist').style.display='block';
+  // 업로드 영역 접기
+  const gzone=document.getElementById('granter-upload-zone');
+  if(gzone)gzone.closest('div[style*="gradient"]').style.display='none';
+        document.getElementById('uzone').parentElement.style.display='none';
+
+        const msg=`✅ 그랜터 파일 "${f.name}" 업로드 완료!
+추가: ${added}건${skipped?` | 중복 제외: ${skipped}건`:''}`;
+        alert(msg);
+      }catch(err){
+        alert('파일 읽기 오류: '+err.message);
+      }
+    };
+    r.readAsArrayBuffer(f);
+  });
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// 그랜터 통합 업로드 핸들러
+// ══════════════════════════════════════════════════════════════
+function handleGranterType(type, filesObj){
+  const files=Array.from(filesObj||[]);
+  if(!files.length)return;
+  files.forEach(file=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      try{
+        const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+        let hi=0;
+        for(let i=0;i<Math.min(10,raw.length);i++){if(raw[i].filter(x=>String(x).trim()).length>=3){hi=i;break;}}
+        const hdrs=raw[hi].map(h=>String(h).trim());
+        const rows=raw.slice(hi+1).filter(r=>r.some(x=>String(x).trim()));
+        const fi=pats=>{for(const p of pats){const i=hdrs.findIndex(h=>p.test(h));if(i!==-1)return i;}return-1;};
+        let n=0;
+
+        if(type==='tx'){
+          // 계좌 거래내역
+          const dc=fi([/^일시$/i,/일자/i,/날짜/i]);
+          const amtc=fi([/^금액$/i]);
+          const namec=fi([/^사용처$/i,/거래처/i,/적요/i]);
+          const memc=fi([/^사유$/i,/메모/i,/비고/i]);
+          const catc=fi([/^계정과목$/i]);
+          const bankc=fi([/^거래수단$/i]);
+          if(dc===-1||amtc===-1){alert('"'+file.name+'" 파일에서 [일시], [금액] 컬럼을 찾을 수 없어요.
+그랜터 자금일보 엑셀을 올려주세요.');return;}
+          const existingKeys=new Set(TXS.map(t=>`${t.date}|${t.bank}|${t.amount}|${t.type}`));
+          let skipped=0;
+          rows.forEach(row=>{
+            const rawAmt=parseFloat(String(row[amtc]||0).replace(/[^0-9.-]/g,''))||0;
+            if(rawAmt===0)return;
+            const type2=rawAmt>0?'in':'out';
+            const amount=Math.abs(rawAmt);
+            const bank=bankc!==-1?cleanGranterBank(String(row[bankc]||'').trim()):'그랜터';
+            let ds='';
+            const rv=row[dc];
+            if(rv instanceof Date)ds=rv.toISOString().slice(0,10);
+            else{const s=String(rv||'').replace(/T.*/,'').replace(/[./]/g,'-').replace(/\s.*/,'');const m=s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)ds=`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;else return;}
+            const key=`${ds}|${bank}|${amount}|${type2}`;
+            if(existingKeys.has(key)){skipped++;return;}
+            existingKeys.add(key);
+            const name=namec!==-1?String(row[namec]||'').trim():(type2==='in'?'입금':'출금');
+            const memo=memc!==-1?String(row[memc]||'').trim():'';
+            const granterCat=catc!==-1?String(row[catc]||'').trim():'';
+            const t={id:Date.now().toString(36)+Math.random().toString(36).slice(2)+n,date:ds,type:type2,bank,name,cat:'',cls:'',amount,memo};
+            if(granterCat&&granterCat!=='단순이체'){const acct=ensureGranterCat(granterCat,type2);t.cat=acct.key;t.cls=acct.cls||gCls(granterCat);}
+            else if(!granterCat){const m=autoMatch(t);if(m){t.cat=m.key;t.cls=m.cls;}}
+            TXS.push(t);n++;
+          });
+          save();refreshFilters();renderUList();
+          document.getElementById('ulist').style.display='block';
+          setZoneDone('zone-tx','badge-tx',n,skipped);
+          alert(`✅ 계좌 거래내역 ${n}건 업로드${skipped?` (중복 ${skipped}건 제외)`:''}됐습니다.`);
+
+        }else if(type==='inv'){
+          // 세금계산서
+          const dc=fi([/일자|날짜|date/i]);
+          const typec=fi([/구분|매출.*매입|유형/i]);
+          const partc=fi([/거래처|업체|상호|공급.*받는|공급자/i]);
+          const bizc=fi([/사업자/i]);
+          const itemc=fi([/품목|품명|내용/i]);
+          const supc=fi([/공급가액|공급액/i]);
+          const taxc=fi([/세액/i]);
+          const totc=fi([/합계|총액/i]);
+          const memc=fi([/비고|메모|적요/i]);
+          const docc=fi([/계산서.*종류|종류|구분/i]);
+          if(supc===-1){alert('"'+file.name+'"에서 [공급가액] 컬럼을 찾을 수 없어요.
+그랜터 세금계산서 엑셀을 올려주세요.');return;}
+          rows.forEach(row=>{
+            const supply=pNum(row[supc]);if(!supply)return;
+            const tax=taxc!==-1?pNum(row[taxc]):Math.round(supply*0.1);
+            const total=totc!==-1?pNum(row[totc]):supply+tax;
+            const typeRaw=typec!==-1?String(row[typec]||'').trim():'';
+            const invType=typeRaw.includes('매입')||typeRaw.includes('수취')?'in':'out';
+            INVS.push({id:Date.now().toString(36)+n,type:invType,
+              date:dc!==-1?pDate(row[dc]):today(),
+              docType:docc!==-1?String(row[docc]||'세금계산서').trim():'세금계산서',
+              partner:partc!==-1?String(row[partc]||'').trim():'',
+              bizNo:bizc!==-1?String(row[bizc]||'').trim():'',
+              item:itemc!==-1?String(row[itemc]||'').trim():'',
+              supply,tax,total,cat:'',
+              memo:memc!==-1?String(row[memc]||'').trim():''});n++;
+          });
+          saveInvs();
+          setZoneDone('zone-inv','badge-inv',n,0);
+          alert(`✅ 세금계산서 ${n}건 업로드됐습니다.`);
+
+        }else if(type==='card'){
+          // 법인카드
+          const dc=fi([/일자|날짜|사용일/i]);
+          const ccc=fi([/카드.*회사|카드사|카드명/i]);
+          const clc=fi([/카드번호|뒤.*4|last/i]);
+          const hc=fi([/보유/i]);
+          const uc=fi([/사용자/i]);
+          const mc=fi([/가맹점|거래처|매출처|상호/i]);
+          const bc=fi([/사업자/i]);
+          const supc=fi([/공급가액|공급액/i]);
+          const taxc=fi([/세액/i]);
+          const totc=fi([/합계|총액/i]);
+          const tpc=fi([/구분|매출.*매입/i]);
+          const memc=fi([/비고|메모/i]);
+          if(supc===-1&&totc===-1){alert('"'+file.name+'"에서 [공급가액] 컬럼을 찾을 수 없어요.
+그랜터 법인카드 엑셀을 올려주세요.');return;}
+          rows.forEach(row=>{
+            const supply=pNum(row[supc!==-1?supc:totc]);if(!supply)return;
+            const tax=taxc!==-1?pNum(row[taxc]):Math.round(supply*0.1);
+            const total=totc!==-1?pNum(row[totc]):supply+tax;
+            const typeRaw=tpc!==-1?String(row[tpc]||'').trim():'';
+            const cardType=typeRaw.includes('매출')||typeRaw.includes('수입')?'out':'in';
+            CARDS.push({id:Date.now().toString(36)+n,type:cardType,
+              date:dc!==-1?pDate(row[dc]):today(),
+              cardCompany:ccc!==-1?String(row[ccc]||'').trim():'',
+              cardLast4:clc!==-1?String(row[clc]||'').trim().slice(-4):'',
+              holder:hc!==-1?String(row[hc]||'').trim():'',
+              user:uc!==-1?String(row[uc]||'').trim():'',
+              merchant:mc!==-1?String(row[mc]||'').trim():'',
+              bizNo:bc!==-1?String(row[bc]||'').trim():'',
+              supply,tax,total,cat:'',
+              memo:memc!==-1?String(row[memc]||'').trim():''});n++;
+          });
+          saveCards();
+          setZoneDone('zone-card','badge-card',n,0);
+          alert(`✅ 법인카드 ${n}건 업로드됐습니다.`);
+
+        }else if(type==='rc'){
+          // 현금영수증
+          const dc=fi([/일자|날짜|사용일/i]);
+          const partc=fi([/거래처|매출처|업체|상호/i]);
+          const bc=fi([/사업자/i]);
+          const supc=fi([/공급가액|공급액/i]);
+          const taxc=fi([/세액/i]);
+          const totc=fi([/합계|총액/i]);
+          const tpc=fi([/구분|매출.*매입/i]);
+          const memc=fi([/비고|메모/i]);
+          if(supc===-1&&totc===-1){alert('"'+file.name+'"에서 [공급가액] 컬럼을 찾을 수 없어요.
+그랜터 현금영수증 엑셀을 올려주세요.');return;}
+          rows.forEach(row=>{
+            const supply=pNum(row[supc!==-1?supc:totc]);if(!supply)return;
+            const tax=taxc!==-1?pNum(row[taxc]):Math.round(supply*0.1);
+            const total=totc!==-1?pNum(row[totc]):supply+tax;
+            const typeRaw=tpc!==-1?String(row[tpc]||'').trim():'';
+            const rcType=typeRaw.includes('매입')||typeRaw.includes('수취')?'in':'out';
+            RCS.push({id:Date.now().toString(36)+n,type:rcType,
+              date:dc!==-1?pDate(row[dc]):today(),
+              partner:partc!==-1?String(row[partc]||'').trim():'',
+              bizNo:bc!==-1?String(row[bc]||'').trim():'',
+              supply,tax,total,cat:'',
+              memo:memc!==-1?String(row[memc]||'').trim():''});n++;
+          });
+          saveRcs();
+          setZoneDone('zone-rc','badge-rc',n,0);
+          alert(`✅ 현금영수증 ${n}건 업로드됐습니다.`);
+        }
+      }catch(err){alert('파일 읽기 오류: '+err.message);}
+    };
+    r.readAsArrayBuffer(file);
+  });
+}
+
+function setZoneDone(zoneId,badgeId,n,skipped){
+  const zone=document.getElementById(zoneId);
+  const badge=document.getElementById(badgeId);
+  if(zone){zone.classList.add('done');zone.innerHTML=`<div style="font-size:24px">✅</div><div style="font-size:12px;font-weight:600;color:var(--green);margin-top:6px">${n}건 업로드 완료</div>`;}
+  if(badge){badge.style.display='block';badge.textContent=`${n}건`;}
+}
+
+// ── 기존 그랜터 핸들러 호환 ───────────────────────────────────
+function handleGranterFiles(inp){handleGranterType('tx',inp.files);}
+function handleGranterDrop(e){handleGranterType('tx',e.dataTransfer.files);}
+
 function handleFiles(f){pQ=[...f];nextFile();}
 function nextFile(){
   if(!pQ.length){refreshFilters();renderUList();return;}
@@ -1243,6 +1663,18 @@ function applyMap(){
 }
 
 function renderUList(){
+  // 업로드된 데이터 있으면 업로드 영역 숨기기
+  if(TXS.length){
+    document.getElementById('ulist').style.display='block';
+    const gup=document.getElementById('granter-upload-zone')?.closest('[style*="gradient"]');
+    if(gup)gup.style.display='none';
+    document.getElementById('uzone').style.display='none';
+  }else{
+    document.getElementById('ulist').style.display='none';
+    const gup=document.getElementById('granter-upload-zone')?.closest('[style*="gradient"]');
+    if(gup)gup.style.display='';
+    document.getElementById('uzone').style.display='';
+  }
   const banks=[...new Set(TXS.map(t=>t.bank))];
   document.getElementById('fcards').innerHTML=banks.map(b=>{
     const bt=TXS.filter(t=>t.bank===b);
@@ -1864,227 +2296,273 @@ function renderBankSection(){
   document.getElementById('bank-ledger').innerHTML='';
 }
 
-// ── 세금계산서 ────────────────────────────────────────────────────
-function setInvTab(t,el){
-  invTab=t;
-  document.querySelectorAll('[id^="inv-tab-"]').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  renderInvoice();
+
+// ══════════════════════════════════════════════════════════════
+// 공통 유틸
+// ══════════════════════════════════════════════════════════════
+function readExcelFile(file,cb){
+  const r=new FileReader();
+  r.onload=e=>{
+    const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    let hi=0;
+    for(let i=0;i<Math.min(10,raw.length);i++){if(raw[i].filter(x=>String(x).trim()).length>=3){hi=i;break;}}
+    cb(raw[hi].map(h=>String(h).trim()),raw.slice(hi+1).filter(r=>r.some(x=>String(x).trim())));
+  };
+  r.readAsArrayBuffer(file);
 }
+function pNum(v){if(v===null||v===undefined||v==='')return 0;const n=parseFloat(String(v).replace(/[^0-9.-]/g,''));return isNaN(n)?0:n;}
+function pDate(v){
+  if(!v)return today();
+  if(v instanceof Date)return v.toISOString().slice(0,10);
+  const s=String(v).trim().replace(/T.*/,'').replace(/\./g,'-').replace(/\//g,'-');
+  const m=s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  return m?`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`:today();
+}
+function makeXlsx(headers,rows,filename){
+  const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Sheet1');
+  XLSX.writeFile(wb,filename);
+}
+function g(id){return document.getElementById(id)?.value?.trim()||'';}
+
+// ══════════════════════════════════════════════════════════════
+// 세금계산서
+// ══════════════════════════════════════════════════════════════
+let invTab='out';
+function setInvTab(t,el){invTab=t;document.querySelectorAll('[id^="inv-tab-"]').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderInvoice();}
 function renderInvoice(){
   const rows=INVS.filter(r=>r.type===invTab).sort((a,b)=>b.date.localeCompare(a.date));
-  const total=rows.reduce((s,r)=>s+r.total,0);
-  const supply=rows.reduce((s,r)=>s+r.supply,0);
-  const tax=rows.reduce((s,r)=>s+r.tax,0);
-  const label=invTab==='out'?'매출':'매입';
+  const supply=rows.reduce((s,r)=>s+(r.supply||0),0),tax=rows.reduce((s,r)=>s+(r.tax||0),0),total=rows.reduce((s,r)=>s+(r.total||0),0);
+  const lbl=invTab==='out'?'매출':'매입';
   document.getElementById('inv-summary').innerHTML=`
-    <div class="card"><div class="card-title">세금계산서 ${label}(공급가액)</div><div class="card-value ${invTab==='out'?'cv-g':'cv-r'}">${fmt(supply)}</div></div>
+    <div class="card"><div class="card-title">공급가액 합계(${lbl})</div><div class="card-value ${invTab==='out'?'cv-g':'cv-r'}">${fmt(supply)}</div></div>
     <div class="card"><div class="card-title">세액 합계</div><div class="card-value cv-gold">${fmt(tax)}</div></div>
     <div class="card"><div class="card-title">합계금액</div><div class="card-value cv-b">${fmt(total)}</div></div>`;
+  document.getElementById('inv-thead').innerHTML=`<tr><th style="width:88px">작성일자</th><th style="width:68px">종류</th><th>거래처명</th><th style="width:108px">사업자번호</th><th>품목</th><th style="text-align:right;width:108px">공급가액</th><th style="text-align:right;width:88px">세액</th><th style="text-align:right;width:108px">합계</th><th>비고</th><th style="width:44px"></th></tr>`;
   document.getElementById('tb-inv').innerHTML=rows.length?rows.map(r=>`<tr>
-    <td>${r.date}</td><td><span class="tag" style="font-size:11px">${r.docType}</span></td>
-    <td title="${r.partner}">${r.partner||'—'}</td>
-    <td style="text-align:right;color:${invTab==='out'?'var(--green)':'var(--red)'};font-weight:600">${fmt(r.supply)}</td>
-    <td style="text-align:right;color:var(--gold)">${fmt(r.tax)}</td>
-    <td style="text-align:right;font-weight:600">${fmt(r.total)}</td>
-    <td><span class="tag" style="font-size:11px">${r.cat||''}</span></td>
+    <td>${r.date}</td><td><span class="tag" style="font-size:11px">${r.docType||'세금계산서'}</span></td>
+    <td title="${r.partner||''}">${r.partner||'—'}</td><td style="font-size:11px">${r.bizNo||''}</td>
+    <td title="${r.item||''}">${r.item||''}</td>
+    <td style="text-align:right;color:${invTab==='out'?'var(--green)':'var(--red)'};font-weight:600">${fmt(r.supply||0)}</td>
+    <td style="text-align:right;color:var(--gold)">${fmt(r.tax||0)}</td>
+    <td style="text-align:right;font-weight:600">${fmt(r.total||0)}</td>
     <td style="color:var(--text2);font-size:12px">${r.memo||''}</td>
     <td><button class="edbtn" onclick="openInvModal('${r.id}')">편집</button></td>
-  </tr>`).join(''):'<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text2)">내역 없음 — 위 + 추가를 눌러주세요</td></tr>';
+  </tr>`).join(''):`<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text2)">내역 없음 — + 추가 또는 엑셀 업로드</td></tr>`;
   const si=document.getElementById('sum-inv');
-  if(rows.length){si.style.display='flex';si.innerHTML=`<span>총 ${rows.length}건</span><span>공급가액 ${fmt(supply)}</span><span style="color:var(--gold)">세액 ${fmt(tax)}</span><strong>합계 ${fmt(total)}</strong>`;}
-  else si.style.display='none';
+  if(rows.length){si.style.display='flex';si.innerHTML=`<span>${rows.length}건</span><span>공급가액 ${fmt(supply)}</span><span style="color:var(--gold)">세액 ${fmt(tax)}</span><strong>합계 ${fmt(total)}</strong>`;}else si.style.display='none';
 }
 function openInvModal(id){
   const r=id?INVS.find(x=>x.id===id):null;
   document.getElementById('inv-modal-title').textContent=r?'세금계산서 편집':'세금계산서 추가';
   document.getElementById('inv-ek').value=id||'';
   document.getElementById('inv-date').value=r?r.date:today();
-  document.getElementById('inv-doctype').value=r?r.docType:'세금계산서';
+  document.getElementById('inv-doctype').value=r?r.docType||'세금계산서':'세금계산서';
   document.getElementById('inv-partner').value=r?r.partner||'':'';
-  document.getElementById('inv-supply').value=r?r.supply:'';
-  document.getElementById('inv-tax').value=r?r.tax:'';
-  document.getElementById('inv-total').value=r?r.total:'';
+  document.getElementById('inv-bizno').value=r?r.bizNo||'':'';
+  document.getElementById('inv-item').value=r?r.item||'':'';
+  document.getElementById('inv-supply').value=r?r.supply||'':'';
+  document.getElementById('inv-tax').value=r?r.tax||'':'';
+  document.getElementById('inv-total').value=r?r.total||'':'';
   document.getElementById('inv-cat').value=r?r.cat||'':'';
   document.getElementById('inv-memo').value=r?r.memo||'':'';
   document.getElementById('inv-del-btn').style.display=r?'inline-flex':'none';
-  // 계정과목 datalist
-  const dl=document.getElementById('inv-catlist');
-  if(dl)dl.innerHTML=ACCTS.map(a=>`<option value="${a.key}">`).join('');
+  const dl=document.getElementById('inv-catlist');if(dl)dl.innerHTML=ACCTS.map(a=>`<option value="${a.key}">`).join('');
   document.getElementById('invModal').classList.add('open');
 }
 function closeInvModal(){document.getElementById('invModal').classList.remove('open');}
-function calcInvTax(){
-  const s=parseFloat(document.getElementById('inv-supply').value)||0;
-  const dt=document.getElementById('inv-doctype').value;
-  if(dt==='계산서'){document.getElementById('inv-tax').value=0;}
-  else{document.getElementById('inv-tax').value=Math.round(s*0.1);}
-  calcInvTotal();
-}
-function calcInvTotal(){
-  const s=parseFloat(document.getElementById('inv-supply').value)||0;
-  const t=parseFloat(document.getElementById('inv-tax').value)||0;
-  document.getElementById('inv-total').value=s+t;
-}
+function calcInvTax(){const s=pNum(document.getElementById('inv-supply').value);document.getElementById('inv-tax').value=document.getElementById('inv-doctype').value==='계산서'?0:Math.round(s*0.1);calcInvTotal();}
+function calcInvTotal(){const s=pNum(document.getElementById('inv-supply').value),t=pNum(document.getElementById('inv-tax').value);document.getElementById('inv-total').value=s+t;}
 function saveInv(){
   const id=document.getElementById('inv-ek').value;
-  const supply=parseFloat(document.getElementById('inv-supply').value)||0;
-  const tax=parseFloat(document.getElementById('inv-tax').value)||0;
-  if(!supply){alert('공급가액을 입력해주세요');return;}
-  const rec={
-    id:id||Date.now().toString(36),
-    type:invTab,
-    date:document.getElementById('inv-date').value||today(),
-    docType:document.getElementById('inv-doctype').value,
-    partner:document.getElementById('inv-partner').value.trim(),
-    supply,tax,total:supply+tax,
-    cat:document.getElementById('inv-cat').value.trim(),
-    memo:document.getElementById('inv-memo').value.trim(),
-  };
+  const supply=pNum(document.getElementById('inv-supply').value);if(!supply){alert('공급가액을 입력해주세요');return;}
+  const tax=pNum(document.getElementById('inv-tax').value);
+  const rec={id:id||Date.now().toString(36),type:invTab,date:document.getElementById('inv-date').value||today(),docType:document.getElementById('inv-doctype').value,partner:document.getElementById('inv-partner').value.trim(),bizNo:document.getElementById('inv-bizno').value.trim(),item:document.getElementById('inv-item').value.trim(),supply,tax,total:supply+tax,cat:document.getElementById('inv-cat').value.trim(),memo:document.getElementById('inv-memo').value.trim()};
   if(id)INVS=INVS.map(r=>r.id===id?rec:r);else INVS.push(rec);
   saveInvs();closeInvModal();renderInvoice();
 }
-function deleteInv(id){
-  if(!confirm('삭제하시겠습니까?'))return;
-  INVS=INVS.filter(r=>r.id!==id);saveInvs();closeInvModal();renderInvoice();
+function deleteInv(id){if(!confirm('삭제?'))return;INVS=INVS.filter(r=>r.id!==id);saveInvs();closeInvModal();renderInvoice();}
+function uploadInvExcel(inp){
+  const file=inp.files[0];inp.value='';if(!file)return;
+  readExcelFile(file,(hdrs,rows)=>{
+    const fi=pats=>{for(const p of pats){const i=hdrs.findIndex(h=>p.test(h));if(i!==-1)return i;}return-1;};
+    const dc=fi([/일자|날짜/i]),pc=fi([/거래처|업체|상호/i]),bc=fi([/사업자/i]),ic=fi([/품목|품명|내용/i]),sc=fi([/공급가액|공급액/i]),tc=fi([/세액/i]),ttc=fi([/합계|총액/i]),mc=fi([/비고|메모/i]);
+    let n=0;
+    rows.forEach(row=>{const supply=sc!==-1?pNum(row[sc]):0;if(!supply)return;const tax=tc!==-1?pNum(row[tc]):Math.round(supply*0.1);INVS.push({id:Date.now().toString(36)+n,type:invTab,date:dc!==-1?pDate(row[dc]):today(),docType:'세금계산서',partner:pc!==-1?String(row[pc]||'').trim():'',bizNo:bc!==-1?String(row[bc]||'').trim():'',item:ic!==-1?String(row[ic]||'').trim():'',supply,tax,total:ttc!==-1?pNum(row[ttc]):supply+tax,cat:'',memo:mc!==-1?String(row[mc]||'').trim():''});n++;});
+    saveInvs();renderInvoice();alert(`✅ ${n}건 업로드됐습니다.`);
+  });
 }
+function downloadInvTemplate(){makeXlsx(['작성일자','거래처명','사업자등록번호','품목','공급가액','세액','합계금액','비고'],[[today(),'(주)예시','000-00-00000','컨설팅',1000000,100000,1100000,'']] ,`세금계산서_${invTab==='out'?'매출':'매입'}_양식.xlsx`);}
 
-// ── 법인카드 ─────────────────────────────────────────────────────
-function setCardVM(m,el){
-  cardVM=m;
-  document.querySelectorAll('#page-card .fbtn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  const df=document.getElementById('cd-dfilters');
-  if(m==='monthly')df.innerHTML=`<input class="fi" type="month" id="cd-month" value="${ym()}" onchange="renderCard()">`;
-  else df.innerHTML=`<input class="fi" type="date" id="cd-start" value="${ym()}-01" onchange="renderCard()"><span style="color:var(--text2);font-size:12px">~</span><input class="fi" type="date" id="cd-end" value="${today()}" onchange="renderCard()">`;
-  renderCard();
-}
-function getCardRange(){
-  if(cardVM==='monthly'){const m=document.getElementById('cd-month')?.value||ym();const last=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate();return{start:`${m}-01`,end:`${m}-${String(last).padStart(2,'0')}`};}
-  return{start:document.getElementById('cd-start')?.value||ym()+'-01',end:document.getElementById('cd-end')?.value||today()};
-}
+// ══════════════════════════════════════════════════════════════
+// 법인카드
+// ══════════════════════════════════════════════════════════════
+let cardTab='out';
+function setCardTab(t,el){cardTab=t;document.querySelectorAll('[id^="card-tab-"]').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderCard();}
 function renderCard(){
-  const{start,end}=getCardRange();
-  const selCard=document.getElementById('cd-card')?.value||'';
-  const cardNames=[...new Set(CARDS.map(r=>r.cardName).filter(Boolean))];
-  const cs=document.getElementById('cd-card');
-  if(cs)cs.innerHTML='<option value="">전체 카드</option>'+cardNames.map(n=>`<option value="${n}">${n}</option>`).join('');
-  if(selCard&&cs)cs.value=selCard;
-  const rows=CARDS.filter(r=>r.date>=start&&r.date<=end&&(!selCard||r.cardName===selCard)).sort((a,b)=>b.date.localeCompare(a.date));
-  const total=rows.reduce((s,r)=>s+r.amount,0);
+  const rows=CARDS.filter(r=>(r.type||'out')===cardTab).sort((a,b)=>b.date.localeCompare(a.date));
+  const supply=rows.reduce((s,r)=>s+(r.supply||0),0),tax=rows.reduce((s,r)=>s+(r.tax||0),0),total=rows.reduce((s,r)=>s+(r.total||0),0);
+  const lbl=cardTab==='out'?'매출':'매입';
   document.getElementById('card-summary').innerHTML=`
-    <div class="card"><div class="card-title">총 사용액</div><div class="card-value cv-r">${fmt(total)}</div></div>
-    <div class="card"><div class="card-title">건수</div><div class="card-value cv-gold">${rows.length}건</div></div>
-    ${cardNames.map(n=>{const s=rows.filter(r=>r.cardName===n).reduce((a,r)=>a+r.amount,0);return`<div class="card"><div class="card-title">${n}</div><div class="card-value cv-r">${fmt(s)}</div></div>`;}).join('')}`;
-  document.getElementById('tb-card').innerHTML=rows.length?rows.map(r=>`<tr>
-    <td>${r.date}</td>
-    <td><span class="tag" style="font-size:11px">${r.cardName||'—'}</span></td>
-    <td title="${r.merchant}">${r.merchant||'—'}</td>
-    <td style="text-align:right;font-weight:600;color:var(--red)">${fmt(r.amount)}</td>
-    <td><span class="tag" style="font-size:11px">${r.cat||''}</span></td>
-    <td style="color:var(--text2);font-size:12px">${r.memo||''}</td>
-    <td><button class="edbtn" onclick="openCardModal('${r.id}')">편집</button></td>
-  </tr>`).join(''):'<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text2)">내역 없음 — 위 + 추가를 눌러주세요</td></tr>';
+    <div class="card"><div class="card-title">공급가액(${lbl})</div><div class="card-value ${cardTab==='out'?'cv-g':'cv-r'}">${fmt(supply)}</div></div>
+    <div class="card"><div class="card-title">세액</div><div class="card-value cv-gold">${fmt(tax)}</div></div>
+    <div class="card"><div class="card-title">합계금액</div><div class="card-value cv-b">${fmt(total)}</div></div>
+    <div class="card"><div class="card-title">건수</div><div class="card-value cv-gold">${rows.length}건</div></div>`;
+  if(cardTab==='in'){
+    document.getElementById('card-thead').innerHTML=`<tr><th style="width:88px">사용일자</th><th>카드회사</th><th style="width:70px">뒤4자리</th><th>보유자</th><th>사용자</th><th>거래처명</th><th style="width:100px">사업자번호</th><th style="text-align:right;width:100px">공급가액</th><th style="text-align:right;width:80px">세액</th><th style="text-align:right;width:100px">합계</th><th>비고</th><th style="width:44px"></th></tr>`;
+    document.getElementById('tb-card').innerHTML=rows.length?rows.map(r=>`<tr><td>${r.date}</td><td title="${r.cardCompany||''}">${r.cardCompany||'—'}</td><td style="font-size:12px">${r.cardLast4||''}</td><td>${r.holder||''}</td><td>${r.user||''}</td><td title="${r.merchant||''}">${r.merchant||'—'}</td><td style="font-size:11px">${r.bizNo||''}</td><td style="text-align:right;color:var(--red);font-weight:600">${fmt(r.supply||0)}</td><td style="text-align:right;color:var(--gold)">${fmt(r.tax||0)}</td><td style="text-align:right;font-weight:600">${fmt(r.total||0)}</td><td style="color:var(--text2);font-size:12px">${r.memo||''}</td><td><button class="edbtn" onclick="openCardModal('${r.id}')">편집</button></td></tr>`).join(''):`<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--text2)">내역 없음</td></tr>`;
+  }else{
+    document.getElementById('card-thead').innerHTML=`<tr><th>매출처명</th><th style="width:110px">사업자번호</th><th style="text-align:right;width:110px">공급가액</th><th style="text-align:right;width:90px">세액</th><th style="text-align:right;width:110px">합계</th><th>비고</th><th style="width:44px"></th></tr>`;
+    document.getElementById('tb-card').innerHTML=rows.length?rows.map(r=>`<tr><td title="${r.merchant||''}">${r.merchant||'—'}</td><td style="font-size:11px">${r.bizNo||''}</td><td style="text-align:right;color:var(--green);font-weight:600">${fmt(r.supply||0)}</td><td style="text-align:right;color:var(--gold)">${fmt(r.tax||0)}</td><td style="text-align:right;font-weight:600">${fmt(r.total||0)}</td><td style="color:var(--text2);font-size:12px">${r.memo||''}</td><td><button class="edbtn" onclick="openCardModal('${r.id}')">편집</button></td></tr>`).join(''):`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text2)">내역 없음</td></tr>`;
+  }
   const sc=document.getElementById('sum-card');
-  if(rows.length){sc.style.display='flex';sc.innerHTML=`<span>총 ${rows.length}건</span><strong style="color:var(--red)">${fmt(total)}</strong>`;}else sc.style.display='none';
+  if(rows.length){sc.style.display='flex';sc.innerHTML=`<span>${rows.length}건</span><span>공급가액 ${fmt(supply)}</span><span style="color:var(--gold)">세액 ${fmt(tax)}</span><strong>합계 ${fmt(total)}</strong>`;}else sc.style.display='none';
+}
+function cardModalFieldsHtml(r){
+  const v=(f,d='')=>r?r[f]!==undefined?r[f]:d:d;
+  if(cardTab==='in')return`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="fr"><label>사용일자 *</label><input type="date" id="card-date" value="${v('date',today())}"></div>
+    <div class="fr"><label>법인카드회사</label><input type="text" id="card-cardCompany" value="${v('cardCompany')}" placeholder="예: KB국민카드"></div>
+    <div class="fr"><label>카드번호 뒤4자리</label><input type="text" id="card-cardLast4" value="${v('cardLast4')}" placeholder="1234" maxlength="4"></div>
+    <div class="fr"><label>보유자</label><input type="text" id="card-holder" value="${v('holder')}" placeholder="홍길동"></div>
+    <div class="fr"><label>사용자</label><input type="text" id="card-user" value="${v('user')}" placeholder="홍길동"></div>
+    <div class="fr"><label>거래처명</label><input type="text" id="card-merchant" value="${v('merchant')}" list="enl" placeholder="거래처명"></div>
+    <div class="fr"><label>사업자등록번호</label><input type="text" id="card-bizno" value="${v('bizNo')}" placeholder="000-00-00000"></div>
+    <div class="fr"><label>공급가액 *</label><input type="number" id="card-supply" value="${v('supply')}" oninput="calcCardTax()"></div>
+    <div class="fr"><label>세액</label><input type="number" id="card-tax" value="${v('tax')}" oninput="calcCardTotal()"></div>
+    <div class="fr"><label>합계금액</label><input type="number" id="card-total" value="${v('total')}" readonly style="opacity:.7"></div>
+    <div class="fr"><label>계정과목</label><input type="text" id="card-cat" value="${v('cat')}" list="card-catlist" placeholder="계정과목" oninput="onCatInput(this)"><datalist id="card-catlist"></datalist></div>
+    <div class="fr" style="grid-column:1/-1"><label>비고</label><input type="text" id="card-memo" value="${v('memo')}"></div></div>`;
+  return`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="fr" style="grid-column:1/-1"><label>매출처명</label><input type="text" id="card-merchant" value="${v('merchant')}" list="enl" placeholder="매출처명"></div>
+    <div class="fr"><label>사업자등록번호</label><input type="text" id="card-bizno" value="${v('bizNo')}" placeholder="000-00-00000"></div>
+    <div class="fr"><label>공급가액 *</label><input type="number" id="card-supply" value="${v('supply')}" oninput="calcCardTax()"></div>
+    <div class="fr"><label>세액</label><input type="number" id="card-tax" value="${v('tax')}" oninput="calcCardTotal()"></div>
+    <div class="fr"><label>합계금액</label><input type="number" id="card-total" value="${v('total')}" readonly style="opacity:.7"></div>
+    <div class="fr"><label>계정과목</label><input type="text" id="card-cat" value="${v('cat')}" list="card-catlist" placeholder="계정과목" oninput="onCatInput(this)"><datalist id="card-catlist"></datalist></div>
+    <div class="fr" style="grid-column:1/-1"><label>비고</label><input type="text" id="card-memo" value="${v('memo')}"></div></div>`;
 }
 function openCardModal(id){
   const r=id?CARDS.find(x=>x.id===id):null;
   document.getElementById('card-modal-title').textContent=r?'법인카드 편집':'법인카드 추가';
   document.getElementById('card-ek').value=id||'';
-  document.getElementById('card-date').value=r?r.date:today();
-  document.getElementById('card-name').value=r?r.cardName||'':'';
-  document.getElementById('card-merchant').value=r?r.merchant||'':'';
-  document.getElementById('card-amount').value=r?r.amount:'';
-  document.getElementById('card-cat').value=r?r.cat||'':'';
-  document.getElementById('card-memo').value=r?r.memo||'':'';
-  document.getElementById('card-del-btn').style.display=r?'inline-flex':'none';
-  const cardNames=[...new Set(CARDS.map(r=>r.cardName).filter(Boolean))];
-  const dl=document.getElementById('card-namelist');if(dl)dl.innerHTML=cardNames.map(n=>`<option value="${n}">`).join('');
+  document.getElementById('card-modal-fields').innerHTML=cardModalFieldsHtml(r);
   const cl=document.getElementById('card-catlist');if(cl)cl.innerHTML=ACCTS.map(a=>`<option value="${a.key}">`).join('');
+  document.getElementById('card-del-btn').style.display=r?'inline-flex':'none';
   document.getElementById('cardModal').classList.add('open');
 }
 function closeCardModal(){document.getElementById('cardModal').classList.remove('open');}
+function calcCardTax(){const s=pNum(document.getElementById('card-supply')?.value);const t=document.getElementById('card-tax');if(t)t.value=Math.round(s*0.1);calcCardTotal();}
+function calcCardTotal(){const s=pNum(document.getElementById('card-supply')?.value),t=pNum(document.getElementById('card-tax')?.value);const tt=document.getElementById('card-total');if(tt)tt.value=s+t;}
 function saveCard(){
   const id=document.getElementById('card-ek').value;
-  const amount=parseFloat(document.getElementById('card-amount').value)||0;
-  if(!amount){alert('금액을 입력해주세요');return;}
-  const rec={
-    id:id||Date.now().toString(36),
-    date:document.getElementById('card-date').value||today(),
-    cardName:document.getElementById('card-name').value.trim(),
-    merchant:document.getElementById('card-merchant').value.trim(),
-    amount,
-    cat:document.getElementById('card-cat').value.trim(),
-    memo:document.getElementById('card-memo').value.trim(),
-  };
+  const supply=pNum(g('card-supply'));if(!supply){alert('공급가액을 입력해주세요');return;}
+  const tax=pNum(g('card-tax'));
+  const rec={id:id||Date.now().toString(36),type:cardTab,date:g('card-date')||today(),cardCompany:g('card-cardCompany'),cardLast4:g('card-cardLast4'),holder:g('card-holder'),user:g('card-user'),merchant:g('card-merchant'),bizNo:g('card-bizno'),supply,tax,total:supply+tax,cat:g('card-cat'),memo:g('card-memo')};
   if(id)CARDS=CARDS.map(r=>r.id===id?rec:r);else CARDS.push(rec);
   saveCards();closeCardModal();renderCard();
 }
-function deleteCard(id){
-  if(!confirm('삭제하시겠습니까?'))return;
-  CARDS=CARDS.filter(r=>r.id!==id);saveCards();closeCardModal();renderCard();
+function deleteCard(id){if(!confirm('삭제?'))return;CARDS=CARDS.filter(r=>r.id!==id);saveCards();closeCardModal();renderCard();}
+function uploadCardExcel(inp){
+  const file=inp.files[0];inp.value='';if(!file)return;
+  readExcelFile(file,(hdrs,rows)=>{
+    const fi=pats=>{for(const p of pats){const i=hdrs.findIndex(h=>p.test(h));if(i!==-1)return i;}return-1;};
+    let n=0;
+    if(cardTab==='in'){
+      const dc=fi([/일자|날짜/i]),cc=fi([/카드.*회사|카드사|카드명/i]),lc=fi([/뒤.*4|last.*4|카드번호/i]),hc=fi([/보유/i]),uc=fi([/사용자/i]),mc=fi([/거래처|가맹점|업체|상호/i]),bc=fi([/사업자/i]),sc=fi([/공급가액|공급액/i]),tc=fi([/세액/i]),ttc=fi([/합계|총액/i]),nmc=fi([/비고|메모/i]);
+      rows.forEach(row=>{const supply=sc!==-1?pNum(row[sc]):0;if(!supply)return;const tax=tc!==-1?pNum(row[tc]):Math.round(supply*0.1);CARDS.push({id:Date.now().toString(36)+n,type:'in',date:dc!==-1?pDate(row[dc]):today(),cardCompany:cc!==-1?String(row[cc]||'').trim():'',cardLast4:lc!==-1?String(row[lc]||'').trim().slice(-4):'',holder:hc!==-1?String(row[hc]||'').trim():'',user:uc!==-1?String(row[uc]||'').trim():'',merchant:mc!==-1?String(row[mc]||'').trim():'',bizNo:bc!==-1?String(row[bc]||'').trim():'',supply,tax,total:ttc!==-1?pNum(row[ttc]):supply+tax,cat:'',memo:nmc!==-1?String(row[nmc]||'').trim():''});n++;});
+    }else{
+      const mc=fi([/매출처|거래처|업체|상호/i]),bc=fi([/사업자/i]),sc=fi([/공급가액|공급액/i]),tc=fi([/세액/i]),ttc=fi([/합계|총액/i]),nmc=fi([/비고|메모/i]);
+      rows.forEach(row=>{const supply=sc!==-1?pNum(row[sc]):0;if(!supply)return;const tax=tc!==-1?pNum(row[tc]):Math.round(supply*0.1);CARDS.push({id:Date.now().toString(36)+n,type:'out',date:today(),merchant:mc!==-1?String(row[mc]||'').trim():'',bizNo:bc!==-1?String(row[bc]||'').trim():'',supply,tax,total:ttc!==-1?pNum(row[ttc]):supply+tax,cat:'',memo:nmc!==-1?String(row[nmc]||'').trim():''});n++;});
+    }
+    saveCards();renderCard();alert(`✅ ${n}건 업로드됐습니다.`);
+  });
+}
+function downloadCardTemplate(){
+  if(cardTab==='in')makeXlsx(['사용일자','법인카드회사','카드번호 뒤4자리','보유자','사용자','거래처명','사업자등록번호','공급가액','세액','합계금액','비고'],[[today(),'KB국민카드','1234','홍길동','홍길동','스타벅스','000-00-00000',10000,1000,11000,'']],'법인카드_매입_양식.xlsx');
+  else makeXlsx(['매출처명','사업자등록번호','공급가액','세액','합계금액','비고'],[['(주)예시','000-00-00000',1000000,100000,1100000,'']],'법인카드_매출_양식.xlsx');
 }
 
-// ── 현금영수증 ────────────────────────────────────────────────────
-function setRcTab(t,el){
-  rcTab=t;
-  document.querySelectorAll('[id^="rc-tab-"]').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  renderReceipt();
-}
+// ══════════════════════════════════════════════════════════════
+// 현금영수증
+// ══════════════════════════════════════════════════════════════
+let rcTab='out';
+function setRcTab(t,el){rcTab=t;document.querySelectorAll('[id^="rc-tab-"]').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderReceipt();}
 function renderReceipt(){
-  const rows=RCS.filter(r=>r.type===rcTab).sort((a,b)=>b.date.localeCompare(a.date));
-  const total=rows.reduce((s,r)=>s+r.amount,0);
-  const label=rcTab==='out'?'매출':'매입';
+  const rows=RCS.filter(r=>(r.type||'out')===rcTab).sort((a,b)=>b.date.localeCompare(a.date));
+  const supply=rows.reduce((s,r)=>s+(r.supply||0),0),tax=rows.reduce((s,r)=>s+(r.tax||0),0),total=rows.reduce((s,r)=>s+(r.total||0),0);
+  const lbl=rcTab==='out'?'매출':'매입';
   document.getElementById('rc-summary').innerHTML=`
-    <div class="card"><div class="card-title">현금영수증 ${label} 건수</div><div class="card-value cv-gold">${rows.length}건</div></div>
-    <div class="card"><div class="card-title">합계금액</div><div class="card-value ${rcTab==='out'?'cv-g':'cv-r'}">${fmt(total)}</div></div>
-    <div class="card"><div class="card-title">부가세(10%)</div><div class="card-value cv-b">${fmt(Math.round(total/11))}</div></div>`;
-  document.getElementById('tb-rc').innerHTML=rows.length?rows.map(r=>`<tr>
-    <td>${r.date}</td>
-    <td title="${r.partner}">${r.partner||'—'}</td>
-    <td style="text-align:right;font-weight:600;color:${rcTab==='out'?'var(--green)':'var(--red)'}">${fmt(r.amount)}</td>
-    <td><span class="tag" style="font-size:11px">${r.cat||''}</span></td>
-    <td style="color:var(--text2);font-size:12px">${r.memo||''}</td>
-    <td><button class="edbtn" onclick="openRcModal('${r.id}')">편집</button></td>
-  </tr>`).join(''):'<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text2)">내역 없음 — 위 + 추가를 눌러주세요</td></tr>';
+    <div class="card"><div class="card-title">공급가액(${lbl})</div><div class="card-value ${rcTab==='out'?'cv-g':'cv-r'}">${fmt(supply)}</div></div>
+    <div class="card"><div class="card-title">세액</div><div class="card-value cv-gold">${fmt(tax)}</div></div>
+    <div class="card"><div class="card-title">합계금액</div><div class="card-value cv-b">${fmt(total)}</div></div>`;
+  if(rcTab==='in'){
+    document.getElementById('rc-thead').innerHTML=`<tr><th style="width:88px">사용일자</th><th>거래처명</th><th style="width:108px">사업자번호</th><th style="text-align:right;width:108px">공급가액</th><th style="text-align:right;width:88px">세액</th><th style="text-align:right;width:108px">합계</th><th>비고</th><th style="width:44px"></th></tr>`;
+    document.getElementById('tb-rc').innerHTML=rows.length?rows.map(r=>`<tr><td>${r.date}</td><td title="${r.partner||''}">${r.partner||'—'}</td><td style="font-size:11px">${r.bizNo||''}</td><td style="text-align:right;color:var(--red);font-weight:600">${fmt(r.supply||0)}</td><td style="text-align:right;color:var(--gold)">${fmt(r.tax||0)}</td><td style="text-align:right;font-weight:600">${fmt(r.total||0)}</td><td style="color:var(--text2);font-size:12px">${r.memo||''}</td><td><button class="edbtn" onclick="openRcModal('${r.id}')">편집</button></td></tr>`).join(''):`<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text2)">내역 없음</td></tr>`;
+  }else{
+    document.getElementById('rc-thead').innerHTML=`<tr><th>매출처명</th><th style="width:108px">사업자번호</th><th style="text-align:right;width:108px">공급가액</th><th style="text-align:right;width:88px">세액</th><th style="text-align:right;width:108px">합계</th><th>비고</th><th style="width:44px"></th></tr>`;
+    document.getElementById('tb-rc').innerHTML=rows.length?rows.map(r=>`<tr><td title="${r.partner||''}">${r.partner||'—'}</td><td style="font-size:11px">${r.bizNo||''}</td><td style="text-align:right;color:var(--green);font-weight:600">${fmt(r.supply||0)}</td><td style="text-align:right;color:var(--gold)">${fmt(r.tax||0)}</td><td style="text-align:right;font-weight:600">${fmt(r.total||0)}</td><td style="color:var(--text2);font-size:12px">${r.memo||''}</td><td><button class="edbtn" onclick="openRcModal('${r.id}')">편집</button></td></tr>`).join(''):`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text2)">내역 없음</td></tr>`;
+  }
   const sr=document.getElementById('sum-rc');
-  if(rows.length){sr.style.display='flex';sr.innerHTML=`<span>총 ${rows.length}건</span><strong style="color:${rcTab==='out'?'var(--green)':'var(--red)'}">${fmt(total)}</strong>`;}else sr.style.display='none';
+  if(rows.length){sr.style.display='flex';sr.innerHTML=`<span>${rows.length}건</span><span>공급가액 ${fmt(supply)}</span><span style="color:var(--gold)">세액 ${fmt(tax)}</span><strong>합계 ${fmt(total)}</strong>`;}else sr.style.display='none';
+}
+function rcModalFieldsHtml(r){
+  const v=(f,d='')=>r?r[f]!==undefined?r[f]:d:d;
+  if(rcTab==='in')return`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="fr"><label>사용일자 *</label><input type="date" id="rc-date" value="${v('date',today())}"></div>
+    <div class="fr"><label>거래처명</label><input type="text" id="rc-partner" value="${v('partner')}" list="enl" placeholder="거래처명"></div>
+    <div class="fr"><label>사업자등록번호</label><input type="text" id="rc-bizno" value="${v('bizNo')}" placeholder="000-00-00000"></div>
+    <div class="fr"><label>공급가액 *</label><input type="number" id="rc-supply" value="${v('supply')}" oninput="calcRcTax()"></div>
+    <div class="fr"><label>세액</label><input type="number" id="rc-tax" value="${v('tax')}" oninput="calcRcTotal()"></div>
+    <div class="fr"><label>합계금액</label><input type="number" id="rc-total" value="${v('total')}" readonly style="opacity:.7"></div>
+    <div class="fr"><label>계정과목</label><input type="text" id="rc-cat" value="${v('cat')}" list="rc-catlist" oninput="onCatInput(this)"><datalist id="rc-catlist"></datalist></div>
+    <div class="fr" style="grid-column:1/-1"><label>비고</label><input type="text" id="rc-memo" value="${v('memo')}"></div></div>`;
+  return`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="fr" style="grid-column:1/-1"><label>매출처명</label><input type="text" id="rc-partner" value="${v('partner')}" list="enl" placeholder="매출처명"></div>
+    <div class="fr"><label>사업자등록번호</label><input type="text" id="rc-bizno" value="${v('bizNo')}" placeholder="000-00-00000"></div>
+    <div class="fr"><label>공급가액 *</label><input type="number" id="rc-supply" value="${v('supply')}" oninput="calcRcTax()"></div>
+    <div class="fr"><label>세액</label><input type="number" id="rc-tax" value="${v('tax')}" oninput="calcRcTotal()"></div>
+    <div class="fr"><label>합계금액</label><input type="number" id="rc-total" value="${v('total')}" readonly style="opacity:.7"></div>
+    <div class="fr"><label>계정과목</label><input type="text" id="rc-cat" value="${v('cat')}" list="rc-catlist" oninput="onCatInput(this)"><datalist id="rc-catlist"></datalist></div>
+    <div class="fr" style="grid-column:1/-1"><label>비고</label><input type="text" id="rc-memo" value="${v('memo')}"></div></div>`;
 }
 function openRcModal(id){
   const r=id?RCS.find(x=>x.id===id):null;
   document.getElementById('rc-modal-title').textContent=r?'현금영수증 편집':'현금영수증 추가';
   document.getElementById('rc-ek').value=id||'';
-  document.getElementById('rc-date').value=r?r.date:today();
-  document.getElementById('rc-partner').value=r?r.partner||'':'';
-  document.getElementById('rc-amount').value=r?r.amount:'';
-  document.getElementById('rc-cat').value=r?r.cat||'':'';
-  document.getElementById('rc-memo').value=r?r.memo||'':'';
-  document.getElementById('rc-del-btn').style.display=r?'inline-flex':'none';
+  document.getElementById('rc-modal-fields').innerHTML=rcModalFieldsHtml(r);
   const dl=document.getElementById('rc-catlist');if(dl)dl.innerHTML=ACCTS.map(a=>`<option value="${a.key}">`).join('');
+  document.getElementById('rc-del-btn').style.display=r?'inline-flex':'none';
   document.getElementById('rcModal').classList.add('open');
 }
 function closeRcModal(){document.getElementById('rcModal').classList.remove('open');}
+function calcRcTax(){const s=pNum(document.getElementById('rc-supply')?.value);const t=document.getElementById('rc-tax');if(t)t.value=Math.round(s*0.1);calcRcTotal();}
+function calcRcTotal(){const s=pNum(document.getElementById('rc-supply')?.value),t=pNum(document.getElementById('rc-tax')?.value);const tt=document.getElementById('rc-total');if(tt)tt.value=s+t;}
 function saveRc(){
   const id=document.getElementById('rc-ek').value;
-  const amount=parseFloat(document.getElementById('rc-amount').value)||0;
-  if(!amount){alert('금액을 입력해주세요');return;}
-  const rec={
-    id:id||Date.now().toString(36),
-    type:rcTab,
-    date:document.getElementById('rc-date').value||today(),
-    partner:document.getElementById('rc-partner').value.trim(),
-    amount,
-    cat:document.getElementById('rc-cat').value.trim(),
-    memo:document.getElementById('rc-memo').value.trim(),
-  };
+  const supply=pNum(g('rc-supply'));if(!supply){alert('공급가액을 입력해주세요');return;}
+  const tax=pNum(g('rc-tax'));
+  const rec={id:id||Date.now().toString(36),type:rcTab,date:g('rc-date')||today(),partner:g('rc-partner'),bizNo:g('rc-bizno'),supply,tax,total:supply+tax,cat:g('rc-cat'),memo:g('rc-memo')};
   if(id)RCS=RCS.map(r=>r.id===id?rec:r);else RCS.push(rec);
   saveRcs();closeRcModal();renderReceipt();
 }
-function deleteRc(id){
-  if(!confirm('삭제하시겠습니까?'))return;
-  RCS=RCS.filter(r=>r.id!==id);saveRcs();closeRcModal();renderReceipt();
+function deleteRc(id){if(!confirm('삭제?'))return;RCS=RCS.filter(r=>r.id!==id);saveRcs();closeRcModal();renderReceipt();}
+function uploadRcExcel(inp){
+  const file=inp.files[0];inp.value='';if(!file)return;
+  readExcelFile(file,(hdrs,rows)=>{
+    const fi=pats=>{for(const p of pats){const i=hdrs.findIndex(h=>p.test(h));if(i!==-1)return i;}return-1;};
+    const dc=fi([/일자|날짜/i]),pc=fi([/거래처|매출처|업체|상호/i]),bc=fi([/사업자/i]),sc=fi([/공급가액|공급액/i]),tc=fi([/세액/i]),ttc=fi([/합계|총액/i]),mc=fi([/비고|메모/i]);
+    let n=0;
+    rows.forEach(row=>{const supply=sc!==-1?pNum(row[sc]):0;if(!supply)return;const tax=tc!==-1?pNum(row[tc]):Math.round(supply*0.1);RCS.push({id:Date.now().toString(36)+n,type:rcTab,date:dc!==-1?pDate(row[dc]):today(),partner:pc!==-1?String(row[pc]||'').trim():'',bizNo:bc!==-1?String(row[bc]||'').trim():'',supply,tax,total:ttc!==-1?pNum(row[ttc]):supply+tax,cat:'',memo:mc!==-1?String(row[mc]||'').trim():''});n++;});
+    saveRcs();renderReceipt();alert(`✅ ${n}건 업로드됐습니다.`);
+  });
+}
+function downloadRcTemplate(){
+  if(rcTab==='in')makeXlsx(['사용일자','거래처명','사업자등록번호','공급가액','세액','합계금액','비고'],[[today(),'편의점','000-00-00000',10000,1000,11000,'']],'현금영수증_매입_양식.xlsx');
+  else makeXlsx(['매출처명','사업자등록번호','공급가액','세액','합계금액','비고'],[['(주)예시','000-00-00000',100000,10000,110000,'']],'현금영수증_매출_양식.xlsx');
 }
 
 // ── 초기화 ──────────────────────────────────────────────────────
