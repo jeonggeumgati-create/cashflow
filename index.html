@@ -1400,40 +1400,70 @@ function handleGranterType(type, filesObj){
           alert(`✅ 세금계산서 ${n}건 업로드됐습니다.`);
 
         }else if(type==='card'){
-          // 법인카드
-          const dc=fi([/일자|날짜|사용일/i]);
-          const ccc=fi([/카드.*회사|카드사|카드명/i]);
-          const clc=fi([/카드번호|뒤.*4|last/i]);
-          const hc=fi([/보유/i]);
-          const uc=fi([/사용자/i]);
-          const mc=fi([/가맹점|거래처|매출처|상호/i]);
-          const bc=fi([/사업자/i]);
-          const supc=fi([/공급가액|공급액/i]);
-          const taxc=fi([/세액/i]);
-          const totc=fi([/합계|총액/i]);
-          const tpc=fi([/구분|매출.*매입/i]);
-          const memc=fi([/비고|메모/i]);
-          if(supc===-1&&totc===-1){alert('"'+file.name+'"에서 [공급가액] 컬럼을 찾을 수 없어요.\n그랜터 법인카드 엑셀을 올려주세요.');return;}
+          // 법인카드 - 그랜터 실제 형식 지원
+          // 형식A(그랜터): 일시,사용처,금액,계정과목,사유,태그,사용직원,부가세
+          // 형식B(표준):   사용일자,카드회사,카드번호,보유자,사용자,거래처,사업자,공급가액,세액,합계
+          const dc   = fi([/^일시$|일자|날짜/i]);
+          const mc   = fi([/^사용처$|가맹점|거래처|매출처|상호/i]);
+          const amtc = fi([/^금액$/i]);          // 그랜터: 합계금액(부가세 포함)
+          const vatc = fi([/^부가세$/i]);         // 그랜터: 부가세
+          const catc = fi([/^계정과목$/i]);       // 그랜터: 계정과목 직접 import
+          const memc = fi([/^사유$|비고|메모/i]);
+          const uc   = fi([/사용직원|사용자/i]);
+          const hc   = fi([/보유/i]);
+          const ccc  = fi([/카드.*회사|카드사|카드명/i]);
+          const clc  = fi([/카드번호|뒤.*4|last/i]);
+          const bc   = fi([/사업자/i]);
+          const supc = fi([/공급가액|공급액/i]);
+          const taxc = fi([/^세액$/i]);
+          const totc = fi([/^합계$|^총액$/i]);
+          const tpc  = fi([/^구분$/i]);
+          // 유효한 금액 컬럼이 없으면 오류
+          if(amtc===-1 && supc===-1 && totc===-1){
+            alert('"'+file.name+'"
+그랜터 법인카드 엑셀을 올려주세요.
+(지원 컬럼: 금액 또는 공급가액)');return;
+          }
           rows.forEach(row=>{
-            const supply=pNum(row[supc!==-1?supc:totc]);if(!supply)return;
-            const tax=taxc!==-1?pNum(row[taxc]):Math.round(supply*0.1);
-            const total=totc!==-1?pNum(row[totc]):supply+tax;
-            const typeRaw=tpc!==-1?String(row[tpc]||'').trim():'';
-            const cardType=typeRaw.includes('매출')||typeRaw.includes('수입')?'out':'in';
-            CARDS.push({id:Date.now().toString(36)+n,type:cardType,
-              date:dc!==-1?pDate(row[dc]):today(),
-              cardCompany:ccc!==-1?String(row[ccc]||'').trim():'',
-              cardLast4:clc!==-1?String(row[clc]||'').trim().slice(-4):'',
-              holder:hc!==-1?String(row[hc]||'').trim():'',
-              user:uc!==-1?String(row[uc]||'').trim():'',
+            let total, tax, supply, cardType;
+            if(amtc!==-1){
+              // 그랜터 형식: 금액=합계(음수=매입), 부가세=VAT
+              const rawAmt = pNum(row[amtc]);
+              if(rawAmt===0)return;
+              total   = Math.abs(rawAmt);
+              tax     = vatc!==-1 ? Math.abs(pNum(row[vatc])) : Math.round(total/11);
+              supply  = total - tax;
+              cardType= rawAmt>0?'out':'in'; // 음수=매입, 양수=매출
+            }else{
+              // 표준 형식: 공급가액/세액/합계
+              supply = pNum(row[supc!==-1?supc:totc]);
+              if(!supply)return;
+              tax    = taxc!==-1?pNum(row[taxc]):Math.round(supply*0.1);
+              total  = totc!==-1?pNum(row[totc]):supply+tax;
+              const typeRaw = tpc!==-1?String(row[tpc]||'').trim():'';
+              cardType = typeRaw.includes('매출')||typeRaw.includes('수입')?'out':'in';
+            }
+            const granterCat = catc!==-1?String(row[catc]||'').trim():'';
+            const rec = {id:Date.now().toString(36)+n, type:cardType,
+              date:    dc!==-1?pDate(row[dc]):today(),
               merchant:mc!==-1?String(row[mc]||'').trim():'',
-              bizNo:bc!==-1?String(row[bc]||'').trim():'',
-              supply,tax,total,cat:'',
-              memo:memc!==-1?String(row[memc]||'').trim():''});n++;
+              user:    uc!==-1?String(row[uc]||'').trim():'',
+              holder:  hc!==-1?String(row[hc]||'').trim():'',
+              cardCompany:ccc!==-1?String(row[ccc]||'').trim():'',
+              cardLast4:  clc!==-1?String(row[clc]||'').trim().slice(-4):'',
+              bizNo:   bc!==-1?String(row[bc]||'').trim():'',
+              supply, tax, total, cat:'',
+              memo:    memc!==-1?String(row[memc]||'').trim():''};
+            // 계정과목 직접 import
+            if(granterCat){
+              const acct=ensureGranterCat(granterCat, cardType);
+              rec.cat=acct.key; rec.cls=acct.cls||gCls(granterCat);
+            }
+            CARDS.push(rec); n++;
           });
           saveCards();
           setZoneDone('zone-card','badge-card',n,0);
-          alert(`✅ 법인카드 ${n}건 업로드됐습니다.`);
+          alert('✅ 법인카드 '+n+'건 업로드됐습니다.');
 
         }else if(type==='rc'){
           // 현금영수증
