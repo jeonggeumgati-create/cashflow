@@ -170,9 +170,15 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
     </div>
     <a href="https://app.granter.biz" target="_blank"
       style="background:rgba(201,122,244,.15);color:#c97af4;border:1px solid rgba(201,122,244,.3);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none">
-      🟣 그랜터 열기 →
+      그랜터 열기 →
     </a>
   </div>
+
+  <!-- 파일 입력 4개 (숨김) -->
+  <input type="file" id="fi-tx"   accept=".xlsx,.xls,.csv" multiple style="display:none" onchange="handleGranterType('tx',  this); this.value=''">
+  <input type="file" id="fi-inv"  accept=".xlsx,.xls,.csv" multiple style="display:none" onchange="handleGranterType('inv', this); this.value=''">
+  <input type="file" id="fi-card" accept=".xlsx,.xls,.csv" multiple style="display:none" onchange="handleGranterType('card',this); this.value=''">
+  <input type="file" id="fi-rc"   accept=".xlsx,.xls,.csv" multiple style="display:none" onchange="handleGranterType('rc',  this); this.value=''">
 
   <!-- 4개 업로드 카드 -->
   <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:24px">
@@ -187,17 +193,14 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
         </div>
         <div id="badge-tx" style="margin-left:auto;display:none;background:rgba(0,200,150,.15);color:var(--green);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px"></div>
       </div>
-      <div class="upload-card-zone" id="zone-tx"
-        onclick="document.getElementById('fi-tx').click()"
+      <label for="fi-tx" id="zone-tx" class="upload-card-zone"
         ondragover="event.preventDefault();this.classList.add('uz-hover')"
         ondragleave="this.classList.remove('uz-hover')"
-        ondrop="event.preventDefault();this.classList.remove('uz-hover');handleGranterType('tx',event.dataTransfer.files)">
-        <div style="font-size:20px">📂</div>
-        <div style="font-size:12px;margin-top:6px;color:var(--text2)">클릭 또는 드래그</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px">계좌_전체_*.xlsx</div>
-      </div>
-      <input type="file" id="fi-tx" accept=".xlsx,.xls,.csv" multiple style="display:none"
-        onchange="handleGranterType('tx',this.files);this.value=''">
+        ondrop="event.preventDefault();this.classList.remove('uz-hover');handleGranterTypeDrop('tx',event)">
+        <div style="font-size:26px">📂</div>
+        <div style="font-size:13px;font-weight:600;margin-top:8px">클릭 또는 드래그</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px">계좌_전체_*.xlsx</div>
+      </label>
       <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--text2);background:rgba(0,200,150,.08);padding:2px 7px;border-radius:4px">✓ 입출금 자동분류</span>
         <span style="font-size:11px;color:var(--text2);background:rgba(0,200,150,.08);padding:2px 7px;border-radius:4px">✓ 계정과목 import</span>
@@ -215,17 +218,14 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
         </div>
         <div id="badge-inv" style="margin-left:auto;display:none;background:rgba(74,158,255,.15);color:var(--blue);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px"></div>
       </div>
-      <div class="upload-card-zone" id="zone-inv"
-        onclick="document.getElementById('fi-inv').click()"
+      <label for="fi-inv" id="zone-inv" class="upload-card-zone"
         ondragover="event.preventDefault();this.classList.add('uz-hover')"
         ondragleave="this.classList.remove('uz-hover')"
-        ondrop="event.preventDefault();this.classList.remove('uz-hover');handleGranterType('inv',event.dataTransfer.files)">
-        <div style="font-size:20px">📂</div>
-        <div style="font-size:12px;margin-top:6px;color:var(--text2)">클릭 또는 드래그</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px">세금계산서_*.xlsx</div>
-      </div>
-      <input type="file" id="fi-inv" accept=".xlsx,.xls,.csv" multiple style="display:none"
-        onchange="handleGranterType('inv',this.files);this.value=''">
+        ondrop="event.preventDefault();this.classList.remove('uz-hover');handleGranterTypeDrop('inv',event)">
+        <div style="font-size:26px">📂</div>
+        <div style="font-size:13px;font-weight:600;margin-top:8px">클릭 또는 드래그</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px">세금계산서_*.xlsx</div>
+      </label>
       <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--text2);background:rgba(74,158,255,.08);padding:2px 7px;border-radius:4px">✓ 매출/매입 자동구분</span>
         <span style="font-size:11px;color:var(--text2);background:rgba(74,158,255,.08);padding:2px 7px;border-radius:4px">✓ 공급가액·세액 분리</span>
@@ -242,17 +242,14 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
         </div>
         <div id="badge-card" style="margin-left:auto;display:none;background:rgba(240,180,41,.15);color:var(--gold);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px"></div>
       </div>
-      <div class="upload-card-zone" id="zone-card"
-        onclick="document.getElementById('fi-card').click()"
+      <label for="fi-card" id="zone-card" class="upload-card-zone"
         ondragover="event.preventDefault();this.classList.add('uz-hover')"
         ondragleave="this.classList.remove('uz-hover')"
-        ondrop="event.preventDefault();this.classList.remove('uz-hover');handleGranterType('card',event.dataTransfer.files)">
-        <div style="font-size:20px">📂</div>
-        <div style="font-size:12px;margin-top:6px;color:var(--text2)">클릭 또는 드래그</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px">법인카드_*.xlsx</div>
-      </div>
-      <input type="file" id="fi-card" accept=".xlsx,.xls,.csv" multiple style="display:none"
-        onchange="handleGranterType('card',this.files);this.value=''">
+        ondrop="event.preventDefault();this.classList.remove('uz-hover');handleGranterTypeDrop('card',event)">
+        <div style="font-size:26px">📂</div>
+        <div style="font-size:13px;font-weight:600;margin-top:8px">클릭 또는 드래그</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px">법인카드_*.xlsx</div>
+      </label>
       <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--text2);background:rgba(240,180,41,.08);padding:2px 7px;border-radius:4px">✓ 카드사·번호 자동인식</span>
         <span style="font-size:11px;color:var(--text2);background:rgba(240,180,41,.08);padding:2px 7px;border-radius:4px">✓ 매출/매입 구분</span>
@@ -269,17 +266,14 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
         </div>
         <div id="badge-rc" style="margin-left:auto;display:none;background:rgba(255,94,94,.15);color:var(--red);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px"></div>
       </div>
-      <div class="upload-card-zone" id="zone-rc"
-        onclick="document.getElementById('fi-rc').click()"
+      <label for="fi-rc" id="zone-rc" class="upload-card-zone"
         ondragover="event.preventDefault();this.classList.add('uz-hover')"
         ondragleave="this.classList.remove('uz-hover')"
-        ondrop="event.preventDefault();this.classList.remove('uz-hover');handleGranterType('rc',event.dataTransfer.files)">
-        <div style="font-size:20px">📂</div>
-        <div style="font-size:12px;margin-top:6px;color:var(--text2)">클릭 또는 드래그</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px">현금영수증_*.xlsx</div>
-      </div>
-      <input type="file" id="fi-rc" accept=".xlsx,.xls,.csv" multiple style="display:none"
-        onchange="handleGranterType('rc',this.files);this.value=''">
+        ondrop="event.preventDefault();this.classList.remove('uz-hover');handleGranterTypeDrop('rc',event)">
+        <div style="font-size:26px">📂</div>
+        <div style="font-size:13px;font-weight:600;margin-top:8px">클릭 또는 드래그</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px">현금영수증_*.xlsx</div>
+      </label>
       <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--text2);background:rgba(255,94,94,.08);padding:2px 7px;border-radius:4px">✓ 매출/매입 자동구분</span>
         <span style="font-size:11px;color:var(--text2);background:rgba(255,94,94,.08);padding:2px 7px;border-radius:4px">✓ 공급가액·세액 분리</span>
@@ -288,29 +282,33 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
 
   </div>
 
-  <!-- 또는 일반 은행 업로드 -->
+  <!-- 일반 은행 업로드 -->
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
     <div style="height:1px;flex:1;background:var(--border)"></div>
     <div style="font-size:12px;color:var(--text2);white-space:nowrap">또는 은행 직접 업로드</div>
     <div style="height:1px;flex:1;background:var(--border)"></div>
   </div>
-  <div class="uz" id="uzone" onclick="document.getElementById('fI').click()"
+  <label for="fI" class="uz" id="uzone"
     ondragover="event.preventDefault();this.classList.add('drag')"
     ondragleave="this.classList.remove('drag')"
     ondrop="event.preventDefault();this.classList.remove('drag');handleFiles(Array.from(event.dataTransfer.files))"
-    style="padding:20px;border-radius:12px">
+    style="padding:20px;border-radius:12px;display:block;cursor:pointer">
     <div style="font-size:24px">🏦</div>
     <div style="font-size:14px;font-weight:600;margin:8px 0 4px">국민 · 기업 · 신한 · 하나 · 우리 · 농협 등</div>
     <div style="font-size:12px;color:var(--text2)">각 은행에서 직접 다운로드한 거래내역 파일</div>
-  </div>
+  </label>
   <input type="file" id="fI" accept=".xlsx,.xls,.csv" multiple style="display:none"
     onchange="handleFiles(Array.from(this.files));this.value=''">
 
   <!-- 업로드된 데이터 현황 -->
   <div id="ulist" style="display:none;margin-top:24px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div class="st" style="margin:0">📊 업로드된 데이터 현황</div>
-      <button class="btn dg" onclick="clearAll()" style="height:30px;font-size:12px">전체 삭제</button>
+      <div class="st" style="margin:0">📊 업로드된 거래내역</div>
+      <div style="display:flex;gap:8px">
+        <label for="fi-tx" class="btn gold" style="display:inline-flex;align-items:center;cursor:pointer;height:34px;padding:0 12px;font-size:12px">🏦 거래내역 추가</label>
+        <label for="fI"    class="btn"      style="display:inline-flex;align-items:center;cursor:pointer;height:34px;padding:0 12px;font-size:12px">+ 은행 추가</label>
+        <button class="btn dg" onclick="clearAll()" style="height:34px;font-size:12px">전체 삭제</button>
+      </div>
     </div>
     <div id="fcards" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
     <div id="txprev"></div>
@@ -1314,8 +1312,9 @@ function handleGranterFiles(inp){
 // ══════════════════════════════════════════════════════════════
 // 그랜터 통합 업로드 핸들러
 // ══════════════════════════════════════════════════════════════
+function handleGranterTypeDrop(type, event){handleGranterType(type, event.dataTransfer);}
 function handleGranterType(type, filesObj){
-  const files=Array.from(filesObj||[]);
+  const files=Array.from((filesObj instanceof FileList||filesObj instanceof DataTransfer)?filesObj:filesObj?.files||[]);
   if(!files.length)return;
   files.forEach(file=>{
     const r=new FileReader();
