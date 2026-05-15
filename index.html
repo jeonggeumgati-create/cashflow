@@ -435,8 +435,8 @@ tr.editing td{background:rgba(0,200,150,.05)!important;padding:4px 6px}
 <div id="page-card" class="page">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
     <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button class="fbtn active" id="card-tab-out" onclick="setCardTab('out',this)">📤 매출</button>
-      <button class="fbtn" id="card-tab-in" onclick="setCardTab('in',this)">📥 매입</button>
+      <button class="fbtn" id="card-tab-out" onclick="setCardTab('out',this)">📤 매출</button>
+      <button class="fbtn active" id="card-tab-in" onclick="setCardTab('in',this)">📥 매입</button>
       <button class="fbtn" onclick="setCardVM('monthly',this)">월별</button>
       <button class="fbtn" onclick="setCardVM('custom',this)">기간지정</button>
       <div id="cd-dfilters"></div>
@@ -1462,6 +1462,14 @@ function handleGranterType(type, filesObj){
             CARDS.push(rec); n++;
           });
           saveCards();
+          // 업로드된 데이터의 type에 맞는 탭으로 자동 전환
+          const uploadedType = CARDS.filter(r=>r.id).slice(-n)[0]?.type || 'in';
+          cardTab = uploadedType;
+          const tabBtn = document.getElementById(uploadedType==='in'?'card-tab-in':'card-tab-out');
+          if(tabBtn){
+            document.querySelectorAll('[id^="card-tab-"]').forEach(b=>b.classList.remove('active'));
+            tabBtn.classList.add('active');
+          }
           setZoneDone('zone-card','badge-card',n,0);
           alert('✅ 법인카드 '+n+'건 업로드됐습니다.');
 
@@ -2276,7 +2284,7 @@ function saveInvs(){localStorage.setItem(IVK,JSON.stringify(INVS));}
 function saveCards(){localStorage.setItem(CDK,JSON.stringify(CARDS));}
 function saveRcs(){localStorage.setItem(RCK,JSON.stringify(RCS));}
 
-let invTab='out', rcTab='out', cardVM='monthly', bankSectionOpen=true;
+let invTab='out', rcTab='out', cardTab='in', cardVM='monthly', bankSectionOpen=true;
 
 // ── 은행 잔액 섹션 (자금일보 내) ─────────────────────────────────
 function toggleBankSection(){
