@@ -1312,9 +1312,9 @@ function handleGranterFiles(inp){
 // ══════════════════════════════════════════════════════════════
 // 그랜터 통합 업로드 핸들러
 // ══════════════════════════════════════════════════════════════
-function handleGranterTypeDrop(type, event){handleGranterType(type, event.dataTransfer);}
+function handleGranterTypeDrop(type, event){handleGranterType(type, event.dataTransfer.files);}
 function handleGranterType(type, filesObj){
-  const files=Array.from((filesObj instanceof FileList||filesObj instanceof DataTransfer)?filesObj:filesObj?.files||[]);
+  const files=Array.from(filesObj instanceof FileList ? filesObj : filesObj?.files || []);
   if(!files.length)return;
   files.forEach(file=>{
     const r=new FileReader();
