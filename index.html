@@ -88,12 +88,12 @@ main{max-width:1320px;margin:0 auto;padding:24px 28px}
 .dot-in{background:var(--accent)}.dot-out{background:var(--red)}.dot-purple{background:var(--purple)}.dot-gold{background:var(--gold)}
 .thead-total{font-size:13px;font-weight:700}
 .t-in{color:var(--accent)}.t-out{color:var(--red)}
-table{width:100%;border-collapse:collapse;table-layout:fixed}
-thead th{padding:8px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:.3px}
-tbody td{padding:9px 14px;border-bottom:1px solid #f3f4f6;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0}
+table{width:100%;border-collapse:collapse}
+thead th{padding:8px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:.3px;min-width:60px}
+tbody td{padding:9px 14px;border-bottom:1px solid #f3f4f6;font-size:13px;word-break:break-word;vertical-align:top}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:var(--surface)}
-.ra{text-align:right}.amt-in{color:var(--accent);font-weight:600}.amt-out{color:var(--red);font-weight:600}
+.ra{text-align:right}.nowrap{white-space:nowrap}.amt-in{color:var(--accent);font-weight:600}.amt-out{color:var(--red);font-weight:600}
 .tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;background:var(--surface);color:var(--muted);white-space:nowrap}
 .tag-b{background:var(--accent-bg);color:var(--accent)}.tag-r{background:var(--red-bg);color:var(--red)}
 .tag-g{background:var(--green-bg);color:var(--green)}.tag-gold{background:var(--gold-bg);color:var(--gold)}
@@ -124,14 +124,21 @@ tbody tr:hover td{background:var(--surface)}
 .sub-tab{padding:6px 16px;border:1px solid var(--border);border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;background:#fff;color:var(--muted);font-family:inherit;transition:.15s}
 .sub-tab:hover{border-color:var(--accent);color:var(--accent)}
 .sub-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
-.ie-row td { background:#f0f9ff !important; vertical-align:middle; white-space:normal; overflow:visible; }
-.ie-input { width:100%; padding:4px 8px; border:1px solid #d1d5db; border-radius:5px; font-size:12px; font-family:inherit; outline:none; }
-.ie-input:focus { border-color:var(--accent); }
-.ie-save { padding:3px 10px; border:none; border-radius:5px; font-size:11px; font-weight:600; cursor:pointer; background:var(--accent); color:#fff; font-family:inherit; }
-.ie-cancel { padding:3px 8px; border:1px solid var(--border); border-radius:5px; font-size:11px; cursor:pointer; background:#fff; color:var(--muted); font-family:inherit; }
-.ie-del { padding:3px 8px; border:1px solid #fca5a5; border-radius:5px; font-size:11px; cursor:pointer; background:#fff; color:var(--red); font-family:inherit; }
-.edit-btn { padding:2px 8px; border:1px solid var(--border); border-radius:4px; font-size:11px; cursor:pointer; background:#fff; color:var(--muted); font-family:inherit; white-space:nowrap; }
-.edit-btn:hover { border-color:var(--accent); color:var(--accent); }
+.ie-row td { background:#f0f7ff !important; vertical-align:middle; white-space:normal; overflow:visible; padding:6px 10px; }
+.ie-wrap { display:flex; flex-direction:column; gap:3px; }
+.ie-label { font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.3px; }
+.ie-input { width:100%; padding:6px 10px; border:1px solid #d1d5db; border-radius:7px; font-size:13px; font-family:inherit; outline:none; background:#fff; transition:.15s; }
+.ie-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.08); }
+.ie-actions { display:flex; gap:6px; align-items:center; padding:6px 10px; background:#e8f0fe; border-top:1px solid #c7d7fa; }
+.ie-save { padding:6px 16px; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; background:var(--accent); color:#fff; font-family:inherit; transition:.15s; }
+.ie-save:hover { background:#1d4ed8; }
+.ie-cancel { padding:6px 12px; border:1px solid var(--border); border-radius:6px; font-size:12px; cursor:pointer; background:#fff; color:var(--muted); font-family:inherit; transition:.15s; }
+.ie-cancel:hover { border-color:var(--accent); color:var(--accent); }
+.ie-del { padding:6px 12px; border:1px solid #fca5a5; border-radius:6px; font-size:12px; cursor:pointer; background:#fff; color:var(--red); font-family:inherit; margin-left:auto; transition:.15s; }
+.ie-del:hover { background:var(--red-bg); }
+.ie-hint { font-size:11px; color:var(--muted); margin-left:auto; }
+.edit-btn { padding:3px 10px; border:1px solid var(--border); border-radius:5px; font-size:11px; cursor:pointer; background:#fff; color:var(--muted); font-family:inherit; white-space:nowrap; transition:.15s; }
+.edit-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
 @media(max-width:768px){
   main{padding:16px}header{padding:0 16px}
   .two-col,.chart-grid{grid-template-columns:1fr}
@@ -151,6 +158,7 @@ tbody tr:hover td{background:var(--surface)}
     <button class="nav-btn" onclick="showPage('inv')">🧾 세금계산서</button>
     <button class="nav-btn" onclick="showPage('card')">💳 법인카드</button>
     <button class="nav-btn" onclick="showPage('rc')">🧾 현금영수증</button>
+    <button class="nav-btn" onclick="showPage('pl')">📋 손익계산서</button>
     <button class="nav-btn" onclick="showPage('chart')">📈 월별분석</button>
   </nav>
 </header>
@@ -184,11 +192,19 @@ tbody tr:hover td{background:var(--surface)}
   </div>
 
   <div id="uz-inv" style="display:none">
+    <div style="background:var(--accent-bg);border:1px solid #bfdbfe;border-radius:10px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">📥 양식 다운로드 후 업로드하면 자동 인식!</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">양식을 다운로드 → 데이터 입력 → 업로드하면 컬럼 매핑 없이 자동으로 처리됩니다.</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">컬럼: 작성일자 · 구분(매출/매입) · 거래처명 · 사업자등록번호 · 품목 · 공급가액 · 세액 · 합계금액 · 비고</div>
+      </div>
+      <button class="btn btn-p" onclick="downloadTemplate('inv')" style="white-space:nowrap">📥 양식 다운로드</button>
+    </div>
     <label for="fi-inv">
       <div class="upload-zone" id="dz-inv">
         <div class="uz-icon">🧾</div>
         <div class="uz-title">세금계산서 엑셀 업로드</div>
-        <div class="uz-sub">매출·매입 세금계산서 / 계산서를 업로드하세요</div>
+        <div class="uz-sub">양식 파일은 자동 인식 · 다른 형식은 컬럼 매핑 화면이 나타납니다</div>
       </div>
     </label>
     <input type="file" id="fi-inv" accept=".xlsx,.xls,.csv" multiple style="display:none" onchange="prepareFile('inv',this)">
@@ -196,11 +212,19 @@ tbody tr:hover td{background:var(--surface)}
   </div>
 
   <div id="uz-card" style="display:none">
+    <div style="background:var(--gold-bg);border:1px solid #fde68a;border-radius:10px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">📥 양식 다운로드 후 업로드하면 자동 인식!</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">양식을 다운로드 → 데이터 입력 → 업로드하면 컬럼 매핑 없이 자동으로 처리됩니다.</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">컬럼: 사용일자 · 카드사 · 카드번호뒤4자리 · 보유자 · 사용자 · 가맹점명 · 사업자등록번호 · 공급가액 · 세액 · 합계금액 · 메모</div>
+      </div>
+      <button class="btn btn-p" onclick="downloadTemplate('card')" style="white-space:nowrap">📥 양식 다운로드</button>
+    </div>
     <label for="fi-card">
       <div class="upload-zone" id="dz-card">
         <div class="uz-icon">💳</div>
         <div class="uz-title">법인카드 엑셀 업로드</div>
-        <div class="uz-sub">법인카드 사용 내역을 업로드하세요</div>
+        <div class="uz-sub">양식 파일은 자동 인식 · 다른 형식은 컬럼 매핑 화면이 나타납니다</div>
       </div>
     </label>
     <input type="file" id="fi-card" accept=".xlsx,.xls,.csv" multiple style="display:none" onchange="prepareFile('card',this)">
@@ -208,11 +232,19 @@ tbody tr:hover td{background:var(--surface)}
   </div>
 
   <div id="uz-rc" style="display:none">
+    <div style="background:var(--green-bg);border:1px solid #bbf7d0;border-radius:10px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">📥 양식 다운로드 후 업로드하면 자동 인식!</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">양식을 다운로드 → 데이터 입력 → 업로드하면 컬럼 매핑 없이 자동으로 처리됩니다.</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">컬럼: 날짜 · 구분(매출/매입) · 거래처명 · 사업자등록번호 · 공급가액 · 세액 · 합계금액 · 비고</div>
+      </div>
+      <button class="btn btn-p" onclick="downloadTemplate('rc')" style="white-space:nowrap">📥 양식 다운로드</button>
+    </div>
     <label for="fi-rc">
       <div class="upload-zone" id="dz-rc">
         <div class="uz-icon">🧾</div>
         <div class="uz-title">현금영수증 엑셀 업로드</div>
-        <div class="uz-sub">현금영수증 수취·발행 내역을 업로드하세요</div>
+        <div class="uz-sub">양식 파일은 자동 인식 · 다른 형식은 컬럼 매핑 화면이 나타납니다</div>
       </div>
     </label>
     <input type="file" id="fi-rc" accept=".xlsx,.xls,.csv" multiple style="display:none" onchange="prepareFile('rc',this)">
@@ -330,9 +362,45 @@ tbody tr:hover td{background:var(--surface)}
   <div class="tcard">
     <table><thead><tr>
       <th style="width:84px">날짜</th><th>거래처명</th><th style="width:100px">사업자번호</th>
-      <th class="ra" style="width:100px">공급가액</th><th class="ra" style="width:80px">세액</th>
-      <th class="ra" style="width:100px">합계</th><th>비고</th>
+      <th style="width:90px">계정과목</th><th class="ra" style="width:100px">공급가액</th><th class="ra" style="width:80px">세액</th>
+      <th class="ra" style="width:100px">합계</th><th>비고</th><th style="width:44px"></th>
     </tr></thead><tbody id="tbRc"></tbody></table>
+  </div>
+</div>
+
+
+<!-- 손익계산서 -->
+<div id="page-pl" class="page">
+  <div class="filter-bar">
+    <div class="pill-group">
+      <button class="pill active" onclick="setPLP('monthly',this)">월별</button>
+      <button class="pill" onclick="setPLP('daily',this)">일별</button>
+      <button class="pill" onclick="setPLP('custom',this)">기간지정</button>
+    </div>
+    <input type="month" id="plMonth">
+    <input type="date" id="plDate" style="display:none">
+    <div id="plCustom" style="display:none;gap:6px;align-items:center">
+      <input type="date" id="plStart"><span style="color:var(--muted);font-size:12px">~</span><input type="date" id="plEnd">
+    </div>
+    <button class="btn btn-sm" onclick="exportPL()" style="margin-left:auto">📥 엑셀 다운로드</button>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px" id="plStats"></div>
+
+  <div class="tcard">
+    <div class="thead-bar">
+      <div class="thead-title">📋 손익계산서</div>
+      <div style="font-size:12px;color:var(--muted)" id="plPeriodLabel"></div>
+    </div>
+    <table>
+      <thead><tr>
+        <th style="width:40%">항목</th>
+        <th class="ra" style="width:20%">금액</th>
+        <th class="ra" style="width:20%">구성비</th>
+        <th style="width:20%">데이터 출처</th>
+      </tr></thead>
+      <tbody id="tbPL"></tbody>
+    </table>
   </div>
 </div>
 
@@ -362,20 +430,7 @@ tbody tr:hover td{background:var(--surface)}
     </div>
     <div class="modal-body">
       <div class="map-intro" id="mapIntro"></div>
-      <div style="margin-bottom:16px">
-        <div class="map-label" style="margin-bottom:6px;font-size:12px;font-weight:600">🏦 은행명 선택 <span class="req" style="color:var(--red);font-size:10px">필수</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <select id="mapBank" class="map-sel" style="width:180px">
-            <option value="">— 은행 선택 —</option>
-            <option>국민은행</option><option>기업은행</option><option>신한은행</option>
-            <option>하나은행</option><option>우리은행</option><option>농협은행</option>
-            <option>카카오뱅크</option><option>토스뱅크</option><option>SC제일은행</option>
-            <option>전북은행</option><option>부산은행</option><option>경남은행</option>
-            <option value="__custom__">직접 입력</option>
-          </select>
-          <input id="mapBankCustom" class="map-sel" placeholder="은행명 직접 입력" style="width:180px;display:none">
-        </div>
-      </div>
+      <div id="mapExtraField" style="margin-bottom:16px;display:none"></div>
       <div class="preview-wrap" id="mapPreview"></div>
       <div class="map-grid" id="mapFields"></div>
     </div>
@@ -481,7 +536,14 @@ function prepareFile(type, inp) {
       const hdrs = raw[hi].map(h => String(h || '').trim());
       const rows = raw.slice(hi + 1).filter(r => r.some(c => String(c).trim()));
       pendingFile = { type, file, hdrs, rows };
-      openMap(type, file.name, hdrs, rows);
+      // 양식 파일 자동 감지 (inv, card, rc)
+      if (type !== 'tx' && detectTemplate(type, hdrs)) {
+        const n = parseTemplate(type, rows);
+        addFileItem(type, file.name, n);
+        alert('✅ ' + TEMPLATES[type].label + ' 양식 파일 인식 완료! ' + n + '건 추가됐습니다.');
+      } else {
+        openMap(type, file.name, hdrs, rows);
+      }
     };
     reader.readAsArrayBuffer(file);
   });
@@ -594,14 +656,50 @@ function openMap(type, fname, hdrs, rows) {
   });
 
   document.getElementById('mapSaveBtn').onclick = () => applyMap(type, fname, hdrs, rows, fields);
-  // 은행명 직접입력 토글
-  const mbSel = document.getElementById('mapBank');
-  const mbCus = document.getElementById('mapBankCustom');
+
+  // 타입별 추가 필드 (은행명 / 카드사)
+  const extraDiv = document.getElementById('mapExtraField');
   const savedBank = (MAPS[fname] && MAPS[fname].__bank) || '';
-  if (savedBank && !mbSel.querySelector('option[value="'+savedBank+'"]')) {
-    mbSel.value = '__custom__'; mbCus.style.display=''; mbCus.value=savedBank;
-  } else if (savedBank) { mbSel.value = savedBank; }
-  mbSel.onchange = () => { mbCus.style.display = mbSel.value === '__custom__' ? '' : 'none'; };
+  const savedCard = (MAPS[fname] && MAPS[fname].__card) || '';
+
+  if (type === 'tx') {
+    extraDiv.style.display = '';
+    const isCustom = savedBank && !['국민은행','기업은행','신한은행','하나은행','우리은행','농협은행','카카오뱅크','토스뱅크','SC제일은행','전북은행','부산은행','경남은행'].includes(savedBank);
+    extraDiv.innerHTML =
+      '<div class="map-label" style="margin-bottom:6px;font-size:12px;font-weight:600">🏦 은행명 선택 <span style="color:var(--red);font-size:10px">필수</span></div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+        '<select id="mapBank" class="map-sel" style="width:180px">' +
+          '<option value="">— 은행 선택 —</option>' +
+          ['국민은행','기업은행','신한은행','하나은행','우리은행','농협은행','카카오뱅크','토스뱅크','SC제일은행','전북은행','부산은행','경남은행'].map(b=>'<option'+(savedBank===b?' selected':'')+'>'+b+'</option>').join('') +
+          '<option value="__custom__"'+(isCustom?' selected':'')+'>직접 입력</option>' +
+        '</select>' +
+        '<input id="mapBankCustom" class="map-sel" placeholder="은행명 직접 입력" style="width:180px;display:'+(isCustom?'':'none')+'" value="'+(isCustom?savedBank:'')+'">' +
+      '</div>';
+    const mbSel = document.getElementById('mapBank');
+    const mbCus = document.getElementById('mapBankCustom');
+    mbSel.onchange = () => { mbCus.style.display = mbSel.value === '__custom__' ? '' : 'none'; };
+  } else if (type === 'card') {
+    extraDiv.style.display = '';
+    const isCustomCard = savedCard && !['KB국민카드','신한카드','삼성카드','현대카드','롯데카드','우리카드','하나카드','BC카드','NH농협카드'].includes(savedCard);
+    extraDiv.innerHTML =
+      '<div class="map-label" style="margin-bottom:6px;font-size:12px;font-weight:600">💳 카드사 선택</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+        '<select id="mapCardCo" class="map-sel" style="width:180px">' +
+          '<option value="">— 카드사 선택 (선택사항) —</option>' +
+          ['KB국민카드','신한카드','삼성카드','현대카드','롯데카드','우리카드','하나카드','BC카드','NH농협카드'].map(b=>'<option'+(savedCard===b?' selected':'')+'>'+b+'</option>').join('') +
+          '<option value="__custom__"'+(isCustomCard?' selected':'')+'>직접 입력</option>' +
+        '</select>' +
+        '<input id="mapCardCoCustom" class="map-sel" placeholder="카드사명 직접 입력" style="width:180px;display:'+(isCustomCard?'':'none')+'" value="'+(isCustomCard?savedCard:'')+'">' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:4px">파일 내 컬럼에 카드사가 없을 때 기본값으로 사용됩니다.</div>';
+    const ccSel = document.getElementById('mapCardCo');
+    const ccCus = document.getElementById('mapCardCoCustom');
+    ccSel.onchange = () => { ccCus.style.display = ccSel.value === '__custom__' ? '' : 'none'; };
+  } else {
+    // inv, rc: 추가 필드 없음
+    extraDiv.style.display = 'none';
+    extraDiv.innerHTML = '';
+  }
   document.getElementById('mapModal').classList.add('open');
 }
 
@@ -614,13 +712,21 @@ function applyMap(type, fname, hdrs, rows, fields) {
     const v = document.getElementById('mf-' + f.id).value;
     mapping[f.id] = v !== '' ? parseInt(v) : -1;
   });
-  // 은행명 저장
-  const bankSel = document.getElementById('mapBank');
-  const bankName = bankSel.value === '__custom__'
-    ? document.getElementById('mapBankCustom').value.trim()
-    : bankSel.value;
-  if (type === 'tx' && !bankName) { alert('은행명을 선택해주세요.'); return; }
-  mapping.__bank = bankName;
+  // 타입별 추가 값 저장
+  if (type === 'tx') {
+    const bankSel = document.getElementById('mapBank');
+    const bankName = bankSel && bankSel.value === '__custom__'
+      ? document.getElementById('mapBankCustom').value.trim()
+      : (bankSel ? bankSel.value : '');
+    if (!bankName) { alert('은행명을 선택해주세요.'); return; }
+    mapping.__bank = bankName;
+  } else if (type === 'card') {
+    const ccSel = document.getElementById('mapCardCo');
+    const cardCo = ccSel && ccSel.value === '__custom__'
+      ? document.getElementById('mapCardCoCustom').value.trim()
+      : (ccSel ? ccSel.value : '');
+    mapping.__card = cardCo;
+  }
   MAPS[fname] = mapping;
   save(SK.map, MAPS);
 
@@ -715,7 +821,7 @@ function parseCard(rows, m) {
     const typeRaw = gc(row, m.type);
     const cardType = typeRaw.includes('매출') || typeRaw.includes('수입') ? 'out' : cardDefaultType;
     CARDS.push({ id: Date.now().toString(36) + n, date, type: cardType,
-      company: gc(row, m.company), cardno: gc(row, m.cardno),
+      company: gc(row, m.company) || m.__card || '', cardno: gc(row, m.cardno),
       holder: gc(row, m.holder), user: gc(row, m.user),
       merchant: gc(row, m.merchant), bizno: gc(row, m.bizno),
       supply, tax, total, memo: gc(row, m.memo) });
@@ -778,7 +884,13 @@ function addFileItem(type, fname, n) {
         const hdrs = raw[hi].map(h => String(h || '').trim());
         const rows = raw.slice(hi + 1).filter(r => r.some(c => String(c).trim()));
         pendingFile = { type: t, file, hdrs, rows };
-        openMap(t, file.name, hdrs, rows);
+        if (t !== 'tx' && detectTemplate(t, hdrs)) {
+          const n = parseTemplate(t, rows);
+          addFileItem(t, file.name, n);
+          alert('✅ ' + TEMPLATES[t].label + ' 양식 파일 인식 완료! ' + n + '건 추가됐습니다.');
+        } else {
+          openMap(t, file.name, hdrs, rows);
+        }
       };
       reader.readAsArrayBuffer(file);
     });
@@ -790,7 +902,7 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
-  const pages = ['upload','dash','banks','inv','card','rc','chart'];
+  const pages = ['upload','dash','banks','inv','card','rc','pl','chart'];
   const i = pages.indexOf(id);
   if (i >= 0) document.querySelectorAll('.nav-btn')[i].classList.add('active');
   if (id === 'dash') renderDash();
@@ -798,6 +910,7 @@ function showPage(id) {
   else if (id === 'inv') renderInv();
   else if (id === 'card') renderCard();
   else if (id === 'rc') renderRc();
+  else if (id === 'pl') renderPL();
   else if (id === 'chart') renderCharts();
 }
 
@@ -873,29 +986,37 @@ function renderDash() {
 
   const makeRow = (t, type) => {
     if (editingId === t.id) {
-      return '<tr class="ie-row" id="er-'+t.id+'">' +
-        '<td style="font-size:12px;color:var(--muted)">'+t.date+'</td>' +
-        '<td><input class="ie-input" id="ei-name-'+t.id+'" value="'+t.name.replace(/"/g,'&quot;')+'" list="catNameList-'+t.id+'" placeholder="거래처명">' +
-        '<datalist id="catNameList-'+t.id+'">'+[...new Set(TXS.map(x=>x.name).filter(Boolean))].map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'">').join('')+'</datalist></td>' +
-        '<td><input class="ie-input" id="ei-cat-'+t.id+'" value="'+t.cat.replace(/"/g,'&quot;')+'" list="catList-'+t.id+'" placeholder="계정과목">' +
-        '<datalist id="catList-'+t.id+'">'+catList.map(c=>'<option value="'+c+'">').join('')+'</datalist></td>' +
-        '<td><input class="ie-input" id="ei-amt-'+t.id+'" type="number" value="'+t.amount+'" style="text-align:right"></td>' +
-        '<td><input class="ie-input" id="ei-memo-'+t.id+'" value="'+t.memo.replace(/"/g,'&quot;')+'" placeholder="주요내용"></td>' +
-        '<td style="white-space:nowrap;padding:4px 6px">' +
-          '<div style="display:flex;flex-direction:column;gap:3px">' +
-            '<button class="ie-save" data-id="'+t.id+'" onclick="saveEdit(this.dataset.id)">저장</button>' +
+      const nameList = [...new Set(TXS.map(x=>x.name).filter(Boolean))].map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'">').join('');
+      const catListOpts = catList.map(c=>'<option value="'+c+'">').join('');
+      return '<tr class="ie-row" id="er-'+t.id+'" data-eid="'+t.id+'">' +
+        '<td class="nowrap" style="font-size:12px;color:var(--muted);vertical-align:middle">'+t.date+'</td>' +
+        '<td><div class="ie-wrap"><div class="ie-label">거래처명</div>' +
+          '<input class="ie-input" id="ei-name-'+t.id+'" value="'+t.name.replace(/"/g,'&quot;')+'" list="catNameList-'+t.id+'" placeholder="거래처명" onkeydown="ieKey(event)">'+
+          '<datalist id="catNameList-'+t.id+'">'+nameList+'</datalist></div></td>' +
+        '<td><div class="ie-wrap"><div class="ie-label">계정과목</div>' +
+          '<input class="ie-input" id="ei-cat-'+t.id+'" value="'+t.cat.replace(/"/g,'&quot;')+'" list="catList-'+t.id+'" placeholder="계정과목" onkeydown="ieKey(event)">'+
+          '<datalist id="catList-'+t.id+'">'+catListOpts+'</datalist></div></td>' +
+        '<td><div class="ie-wrap"><div class="ie-label">금액</div>' +
+          '<input class="ie-input" id="ei-amt-'+t.id+'" type="number" value="'+t.amount+'" style="text-align:right" onkeydown="ieKey(event)"></div></td>' +
+        '<td><div class="ie-wrap"><div class="ie-label">주요내용</div>' +
+          '<input class="ie-input" id="ei-memo-'+t.id+'" value="'+t.memo.replace(/"/g,'&quot;')+'" placeholder="주요내용" onkeydown="ieKey(event)"></div></td>' +
+        '<td style="vertical-align:middle;white-space:nowrap">' +
+          '<button class="edit-btn" style="background:var(--accent);color:#fff;border-color:var(--accent)" data-id="'+t.id+'" onclick="saveEdit(this.dataset.id)">✓ 저장</button></td>' +
+        '</tr>' +
+        '<tr class="ie-row"><td colspan="6" style="padding:0">' +
+          '<div class="ie-actions">' +
+            '<span class="ie-hint">Enter 저장 · Esc 취소</span>' +
             '<button class="ie-cancel" onclick="cancelEdit()">취소</button>' +
-            '<button class="ie-del" data-id="'+t.id+'" onclick="delTx(this.dataset.id)">삭제</button>' +
-          '</div></td>' +
-        '</tr>';
+            '<button class="ie-del" data-id="'+t.id+'" onclick="delTx(this.dataset.id)">🗑 삭제</button>' +
+          '</div></td></tr>';
     }
     return '<tr id="r-'+t.id+'">' +
-      '<td style="font-size:12px;color:var(--muted)">'+t.date+'</td>' +
-      '<td title="'+t.name+'">'+t.name+'</td>' +
-      '<td><span class="tag '+(type==='in'?'tag-b':'tag-r')+'">'+t.cat+'</span></td>' +
-      '<td class="ra '+(type==='in'?'amt-in':'amt-out')+'">'+fmt(t.amount)+'</td>' +
-      '<td style="color:var(--muted);font-size:12px" title="'+t.memo+'">'+t.memo+'</td>' +
-      '<td><button class="edit-btn" data-id="'+t.id+'" onclick="startEdit(this.dataset.id)">편집</button></td></tr>';
+      '<td class="nowrap" style="font-size:12px;color:var(--muted);min-width:80px">'+t.date+'</td>' +
+      '<td style="min-width:100px">'+t.name+'</td>' +
+      '<td style="min-width:80px"><span class="tag '+(type==='in'?'tag-b':'tag-r')+'">'+t.cat+'</span></td>' +
+      '<td class="ra nowrap '+(type==='in'?'amt-in':'amt-out')+'" style="min-width:90px">'+fmt(t.amount)+'</td>' +
+      '<td style="color:var(--muted);font-size:12px;min-width:100px">'+t.memo+'</td>' +
+      '<td class="nowrap"><button class="edit-btn" data-id="'+t.id+'" onclick="startEdit(this.dataset.id)">편집</button></td></tr>';
   };
 
   document.getElementById('tbIn').innerHTML = ins.length ? ins.map(t => makeRow(t,'in')).join('') : '<tr><td colspan="6" class="empty">입금 내역 없음</td></tr>';
@@ -928,11 +1049,11 @@ function renderBanks() {
   }).join('') || '<div style="color:var(--muted);font-size:13px">데이터 없음</div>';
 
   document.getElementById('tbBanks').innerHTML = all.length ? all.map(t =>
-    '<tr><td style="font-size:12px;color:var(--muted)">'+t.date+'</td>' +
-    '<td><span class="tag">'+t.bank+'</span></td>' +
-    '<td title="'+t.name+'">'+t.name+'</td>' +
-    '<td><span class="tag '+(t.type==='in'?'tag-b':'tag-r')+'">'+(t.type==='in'?'입금':'출금')+'</span></td>' +
-    '<td class="ra '+(t.type==='in'?'amt-in':'amt-out')+'">'+fmt(t.amount)+'</td>' +
+    '<tr><td class="nowrap" style="font-size:12px;color:var(--muted)">'+t.date+'</td>' +
+    '<td class="nowrap"><span class="tag">'+t.bank+'</span></td>' +
+    '<td>'+t.name+'</td>' +
+    '<td class="nowrap"><span class="tag '+(t.type==='in'?'tag-b':'tag-r')+'">'+(t.type==='in'?'입금':'출금')+'</span></td>' +
+    '<td class="ra nowrap '+(t.type==='in'?'amt-in':'amt-out')+'">'+fmt(t.amount)+'</td>' +
     '<td style="color:var(--muted);font-size:12px">'+t.memo+'</td></tr>'
   ).join('') : '<tr><td colspan="6" class="empty">데이터 없음</td></tr>';
 }
@@ -958,14 +1079,27 @@ function renderInv() {
   ].map(([l,v,c])=>'<div class="stat-card"><div class="sc-label">'+l+'</div><div class="sc-value '+c+'">'+v+'</div></div>').join('');
 
   document.getElementById('tbInv').innerHTML = rows.length ? rows.map(r =>
-    '<tr><td style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
-    '<td title="'+r.partner+'">'+r.partner+'</td>' +
-    '<td style="font-size:11px">'+r.bizno+'</td>' +
-    '<td title="'+r.item+'">'+r.item+'</td>' +
-    '<td class="ra '+(invSub==='out'?'amt-in':'amt-out')+'">'+fmt(r.supply)+'</td>' +
-    '<td class="ra" style="color:var(--gold)">'+fmt(r.tax)+'</td>' +
-    '<td class="ra" style="font-weight:600">'+fmt(r.total)+'</td>' +
-    '<td style="color:var(--muted);font-size:12px">'+r.memo+'</td></tr>'
+    (()=>{
+      const catCell = invEditId===r.id
+        ? '<td style="padding:4px 8px"><div style="display:flex;gap:4px">' +
+            '<input id="inv-cat-'+r.id+'" value="'+(r.cat||'').replace(/"/g,'&quot;')+'" list="pl-catlist" class="ie-input" style="width:110px">' +
+            '<button class="ie-save" onclick="saveInvEdit(this.dataset.id)" data-id="'+r.id+'" style="padding:3px 8px">✓</button>' +
+            '<button class="ie-cancel" onclick="cancelInvEdit()" style="padding:3px 6px">✕</button>' +
+          '</div></td>'
+        : '<td><div style="display:flex;align-items:center;gap:4px">' +
+            '<span class="tag" style="flex:1">'+(r.cat||'미설정')+'</span>' +
+            '<button class="edit-btn" data-id="'+r.id+'" onclick="startInvEdit(this.dataset.id)" style="font-size:10px;padding:1px 6px">편집</button>' +
+          '</div></td>';
+      return '<tr><td class="nowrap" style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
+        '<td>'+r.partner+'</td>' +
+        '<td style="font-size:11px">'+r.bizno+'</td>' +
+        '<td>'+r.item+'</td>' +
+        catCell +
+        '<td class="ra nowrap '+(invSub==='out'?'amt-in':'amt-out')+'">'+fmt(r.supply)+'</td>' +
+        '<td class="ra nowrap" style="color:var(--gold)">'+fmt(r.tax)+'</td>' +
+        '<td class="ra nowrap" style="font-weight:600">'+fmt(r.total)+'</td>' +
+        '<td style="color:var(--muted);font-size:12px">'+r.memo+'</td></tr>';
+    })()
   ).join('') : '<tr><td colspan="8" class="empty">내역 없음</td></tr>';
 
   const si = document.getElementById('sumInv');
@@ -996,18 +1130,22 @@ function renderCard() {
   ].map(([l,v,c])=>'<div class="stat-card"><div class="sc-label">'+l+'</div><div class="sc-value '+c+'">'+v+'</div></div>').join('');
 
   if (cardSub === 'in') {
-    document.getElementById('cardHead').innerHTML = '<th style="width:84px">날짜</th><th style="width:88px">카드회사</th><th style="width:60px">뒤4자리</th><th>보유자</th><th>사용자</th><th>가맹점</th><th style="width:100px">사업자번호</th><th class="ra" style="width:90px">공급가액</th><th class="ra" style="width:70px">세액</th><th class="ra" style="width:90px">합계</th><th>메모</th>';
-    document.getElementById('tbCard').innerHTML = rows.length ? rows.map(r =>
-      '<tr><td style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
+    document.getElementById('cardHead').innerHTML = '<th style="width:84px">날짜</th><th style="width:80px">카드회사</th><th style="width:60px">뒤4자리</th><th>보유자</th><th>사용자</th><th>가맹점</th><th style="width:90px">사업자번호</th><th style="width:90px">계정과목</th><th class="ra" style="width:88px">공급가액</th><th class="ra" style="width:68px">세액</th><th class="ra" style="width:88px">합계</th><th>메모</th>';
+    document.getElementById('tbCard').innerHTML = rows.length ? rows.map(r => {
+      const catC = cardEditId===r.id
+        ? '<td style="padding:4px 8px"><div style="display:flex;gap:4px"><input id="card-cat-'+r.id+'" value="'+(r.cat||'').replace(/"/g,'&quot;')+'" list="pl-catlist" class="ie-input" style="width:100px"><button class="ie-save" onclick="saveCardEdit(this.dataset.id)" data-id="'+r.id+'" style="padding:3px 8px">✓</button><button class="ie-cancel" onclick="cancelCardEdit()" style="padding:3px 6px">✕</button></div></td>'
+        : '<td><div style="display:flex;align-items:center;gap:4px"><span class="tag" style="flex:1">'+(r.cat||'미설정')+'</span><button class="edit-btn" data-id="'+r.id+'" onclick="startCardEdit(this.dataset.id)" style="font-size:10px;padding:1px 6px">편집</button></div></td>';
+      return '<tr><td style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
       '<td>'+r.company+'</td><td style="font-size:11px">'+r.cardno+'</td>' +
       '<td>'+r.holder+'</td><td>'+r.user+'</td>' +
-      '<td title="'+r.merchant+'">'+r.merchant+'</td>' +
+      '<td>'+r.merchant+'</td>' +
       '<td style="font-size:11px">'+r.bizno+'</td>' +
-      '<td class="ra amt-out">'+fmt(r.supply)+'</td>' +
-      '<td class="ra" style="color:var(--gold)">'+fmt(r.tax)+'</td>' +
-      '<td class="ra" style="font-weight:600">'+fmt(r.total)+'</td>' +
-      '<td style="color:var(--muted);font-size:12px">'+r.memo+'</td></tr>'
-    ).join('') : '<tr><td colspan="11" class="empty">내역 없음</td></tr>';
+      catC +
+      '<td class="ra nowrap amt-out">'+fmt(r.supply)+'</td>' +
+      '<td class="ra nowrap" style="color:var(--gold)">'+fmt(r.tax)+'</td>' +
+      '<td class="ra nowrap" style="font-weight:600">'+fmt(r.total)+'</td>' +
+      '<td style="color:var(--muted);font-size:12px">'+r.memo+'</td></tr>';
+    }).join('') : '<tr><td colspan="12" class="empty">내역 없음</td></tr>';
   } else {
     document.getElementById('cardHead').innerHTML = '<th style="width:84px">날짜</th><th>가맹점/거래처</th><th style="width:100px">사업자번호</th><th class="ra" style="width:100px">공급가액</th><th class="ra" style="width:80px">세액</th><th class="ra" style="width:100px">합계</th><th>메모</th>';
     document.getElementById('tbCard').innerHTML = rows.length ? rows.map(r =>
@@ -1045,13 +1183,26 @@ function renderRc() {
   ].map(([l,v,c])=>'<div class="stat-card"><div class="sc-label">'+l+'</div><div class="sc-value '+c+'">'+v+'</div></div>').join('');
 
   document.getElementById('tbRc').innerHTML = rows.length ? rows.map(r =>
-    '<tr><td style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
-    '<td title="'+r.partner+'">'+r.partner+'</td>' +
-    '<td style="font-size:11px">'+r.bizno+'</td>' +
-    '<td class="ra '+(rcSub==='out'?'amt-in':'amt-out')+'">'+fmt(r.supply)+'</td>' +
-    '<td class="ra" style="color:var(--gold)">'+fmt(r.tax)+'</td>' +
-    '<td class="ra" style="font-weight:600">'+fmt(r.total)+'</td>' +
-    '<td style="color:var(--muted);font-size:12px">'+r.memo+'</td></tr>'
+    (()=>{
+      const catCell = rcEditId===r.id
+        ? '<td style="padding:4px 8px"><div style="display:flex;gap:4px">' +
+            '<input id="rc-cat-'+r.id+'" value="'+(r.cat||'').replace(/"/g,'&quot;')+'" list="pl-catlist" class="ie-input" style="width:110px">' +
+            '<button class="ie-save" onclick="saveRcEdit(this.dataset.id)" data-id="'+r.id+'" style="padding:3px 8px">✓</button>' +
+            '<button class="ie-cancel" onclick="cancelRcEdit()" style="padding:3px 6px">✕</button>' +
+          '</div></td>'
+        : '<td><div style="display:flex;align-items:center;gap:4px">' +
+            '<span class="tag" style="flex:1">'+(r.cat||'미설정')+'</span>' +
+            '<button class="edit-btn" data-id="'+r.id+'" onclick="startRcEdit(this.dataset.id)" style="font-size:10px;padding:1px 6px">편집</button>' +
+          '</div></td>';
+      return '<tr><td class="nowrap" style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
+        '<td>'+r.partner+'</td>' +
+        '<td style="font-size:11px">'+r.bizno+'</td>' +
+        catCell +
+        '<td class="ra nowrap '+(rcSub==='out'?'amt-in':'amt-out')+'">'+fmt(r.supply)+'</td>' +
+        '<td class="ra nowrap" style="color:var(--gold)">'+fmt(r.tax)+'</td>' +
+        '<td class="ra nowrap" style="font-weight:600">'+fmt(r.total)+'</td>' +
+        '<td style="color:var(--muted);font-size:12px">'+r.memo+'</td></tr>';
+    })()
   ).join('') : '<tr><td colspan="7" class="empty">내역 없음</td></tr>';
 }
 
@@ -1101,6 +1252,143 @@ function renderCharts() {
     }).join('');
 }
 
+
+// ── 양식 정의 (타입별 고정 헤더) ─────────────────────────────
+const TEMPLATES = {
+  inv: {
+    headers: ['작성일자','구분(매출/매입)','거래처명','사업자등록번호','품목','공급가액','세액','합계금액','비고'],
+    sample:  [['2026-05-01','매출','(주)예시','123-45-67890','컨설팅 용역',1000000,100000,1100000,''],
+              ['2026-05-02','매입','공급업체','987-65-43210','원재료',500000,50000,550000,'']],
+    filename: '세금계산서_양식.xlsx',
+    label:    '세금계산서·계산서',
+  },
+  card: {
+    headers: ['사용일자','카드사','카드번호뒤4자리','보유자','사용자','가맹점명','사업자등록번호','공급가액','세액','합계금액','메모'],
+    sample:  [['2026-05-01','KB국민카드','1234','홍길동','홍길동','스타벅스','123-45-67890',4545,455,5000,'업무 미팅'],
+              ['2026-05-02','신한카드','5678','김철수','김철수','주유소','987-65-43210',45455,4545,50000,'주유']],
+    filename: '법인카드_양식.xlsx',
+    label:    '법인카드',
+  },
+  rc: {
+    headers: ['날짜','구분(매출/매입)','거래처명','사업자등록번호','공급가액','세액','합계금액','비고'],
+    sample:  [['2026-05-01','매출','고객사A','123-45-67890',90909,9091,100000,''],
+              ['2026-05-02','매입','편의점','987-65-43210',4545,455,5000,'']],
+    filename: '현금영수증_양식.xlsx',
+    label:    '현금영수증',
+  },
+};
+
+// 양식 다운로드
+function downloadTemplate(type) {
+  const t = TEMPLATES[type];
+  if (!t) return;
+  const ws = XLSX.utils.aoa_to_sheet([t.headers, ...t.sample]);
+  // 헤더 행 스타일 (배경색)
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const cell = ws[XLSX.utils.encode_cell({r:0, c})];
+    if (cell) cell.s = { fill:{fgColor:{rgb:'D6E4FF'}}, font:{bold:true} };
+  }
+  ws['!cols'] = t.headers.map(() => ({wch: 16}));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+  XLSX.writeFile(wb, t.filename);
+}
+
+// 양식 파일 자동 감지 (헤더 일치 여부)
+function detectTemplate(type, hdrs) {
+  const t = TEMPLATES[type];
+  if (!t) return false;
+  // 헤더가 양식과 80% 이상 일치하면 자동 인식
+  const match = t.headers.filter(h => hdrs.includes(h)).length;
+  return match >= Math.ceil(t.headers.length * 0.7);
+}
+
+// 양식 파일 자동 파싱 (매핑 없이 바로 처리)
+function parseTemplate(type, rows) {
+  const t = TEMPLATES[type];
+  const h = t.headers;
+  const fi = name => h.indexOf(name);
+  let n = 0;
+
+  if (type === 'inv') {
+    rows.forEach(row => {
+      const date = pDate(row[fi('작성일자')]);
+      if (!date) return;
+      const supply = pNum(row[fi('공급가액')]);
+      const tax    = pNum(row[fi('세액')]);
+      const total  = pNum(row[fi('합계금액')]) || supply + tax;
+      const typeRaw = String(row[fi('구분(매출/매입)')] || '').trim();
+      const invType = typeRaw.includes('매입') ? 'in' : 'out';
+      INVS.push({
+        id: Date.now().toString(36) + n,
+        date, type: invType,
+        partner: String(row[fi('거래처명')] || '').trim(),
+        bizno:   String(row[fi('사업자등록번호')] || '').trim(),
+        item:    String(row[fi('품목')] || '').trim(),
+        supply, tax, total,
+        memo: String(row[fi('비고')] || '').trim(),
+      });
+      n++;
+    });
+    save(SK.inv, INVS);
+  }
+
+  if (type === 'card') {
+    rows.forEach(row => {
+      const date = pDate(row[fi('사용일자')]);
+      if (!date) return;
+      const supply = pNum(row[fi('공급가액')]);
+      const tax    = pNum(row[fi('세액')]);
+      const total  = pNum(row[fi('합계금액')]) || supply + tax;
+      CARDS.push({
+        id: Date.now().toString(36) + n,
+        date, type: 'in',
+        company: String(row[fi('카드사')] || '').trim(),
+        cardno:  String(row[fi('카드번호뒤4자리')] || '').trim(),
+        holder:  String(row[fi('보유자')] || '').trim(),
+        user:    String(row[fi('사용자')] || '').trim(),
+        merchant: String(row[fi('가맹점명')] || '').trim(),
+        bizno:   String(row[fi('사업자등록번호')] || '').trim(),
+        supply, tax, total,
+        memo: String(row[fi('메모')] || '').trim(),
+      });
+      n++;
+    });
+    save(SK.card, CARDS);
+  }
+
+  if (type === 'rc') {
+    rows.forEach(row => {
+      const date = pDate(row[fi('날짜')]);
+      if (!date) return;
+      const supply = pNum(row[fi('공급가액')]);
+      const tax    = pNum(row[fi('세액')]);
+      const total  = pNum(row[fi('합계금액')]) || supply + tax;
+      const typeRaw = String(row[fi('구분(매출/매입)')] || '').trim();
+      const rcType = typeRaw.includes('매입') ? 'in' : 'out';
+      RCS.push({
+        id: Date.now().toString(36) + n,
+        date, type: rcType,
+        partner: String(row[fi('거래처명')] || '').trim(),
+        bizno:   String(row[fi('사업자등록번호')] || '').trim(),
+        supply, tax, total,
+        memo: String(row[fi('비고')] || '').trim(),
+      });
+      n++;
+    });
+    save(SK.rc, RCS);
+  }
+
+  return n;
+}
+
+// 키보드 단축키 (Enter=저장, Escape=취소)
+function ieKey(e) {
+  if (e.key === 'Enter') { e.preventDefault(); if (editingId) saveEdit(editingId); }
+  if (e.key === 'Escape') { cancelEdit(); }
+}
+
 // ── 인라인 편집 ───────────────────────────────────────
 let editingId = null;
 
@@ -1142,10 +1430,102 @@ function delTx(id) {
   renderDash();
 }
 
+// ── 손익계산서 ───────────────────────────────────────────────
+// 세금계산서 계정과목 편집
+let invEditId=null, rcEditId=null, cardEditId=null;
+function startInvEdit(id){invEditId=id;renderInv();setTimeout(()=>document.getElementById('inv-cat-'+id)?.focus(),50);}
+function cancelInvEdit(){invEditId=null;renderInv();}
+function saveInvEdit(id){const idx=INVS.findIndex(r=>r.id===id);if(idx!==-1)INVS[idx].cat=document.getElementById('inv-cat-'+id)?.value?.trim()||'';save(SK.inv,INVS);invEditId=null;renderInv();}
+function startRcEdit(id){rcEditId=id;renderRc();setTimeout(()=>document.getElementById('rc-cat-'+id)?.focus(),50);}
+function cancelRcEdit(){rcEditId=null;renderRc();}
+function saveRcEdit(id){const idx=RCS.findIndex(r=>r.id===id);if(idx!==-1)RCS[idx].cat=document.getElementById('rc-cat-'+id)?.value?.trim()||'';save(SK.rc,RCS);rcEditId=null;renderRc();}
+function startCardEdit(id){cardEditId=id;renderCard();setTimeout(()=>document.getElementById('card-cat-'+id)?.focus(),50);}
+function cancelCardEdit(){cardEditId=null;renderCard();}
+function saveCardEdit(id){const idx=CARDS.findIndex(r=>r.id===id);if(idx!==-1)CARDS[idx].cat=document.getElementById('card-cat-'+id)?.value?.trim()||'';save(SK.card,CARDS);cardEditId=null;renderCard();}
+
+// 손익계산서 계정과목 분류
+const PL_MAP={'상품매출':'매출액','제품매출':'매출액','수수료수익':'매출액','임대료':'매출액','임대료수익':'매출액','이자수익':'영업외수익','배당금수익':'영업외수익','외환차익':'영업외수익','잡이익':'영업외수익','보험금수익':'영업외수익','유형자산처분이익':'영업외수익','상품매출원가':'매출원가','제품매출원가':'매출원가','급여':'판관비','퇴직급여':'판관비','복리후생비':'판관비','여비교통비':'판관비','접대비':'판관비','통신비':'판관비','수도광열비':'판관비','세금과공과금':'판관비','감가상각비':'판관비','임차료':'판관비','수선비':'판관비','보험료':'판관비','차량유지비':'판관비','운반비':'판관비','도서인쇄비':'판관비','소모품비':'판관비','수수료비용':'판관비','광고선전비':'판관비','대손상각비':'판관비','이자비용':'영업외비용','외환차손':'영업외비용','기부금':'영업외비용','잡손실':'영업외비용','유형자산처분손실':'영업외비용','법인세비용':'법인세'};
+function plCat(cat,type){if(cat&&PL_MAP[cat])return PL_MAP[cat];return type==='in'?'매출액':'판관비';}
+
+let plMode='monthly';
+function setPLP(mode,el){
+  plMode=mode;
+  document.querySelectorAll('#page-pl .pill').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('plMonth').style.display=mode==='monthly'?'':'none';
+  document.getElementById('plDate').style.display=mode==='daily'?'':'none';
+  document.getElementById('plCustom').style.display=mode==='custom'?'flex':'none';
+  renderPL();
+}
+function getPLRange(){
+  if(plMode==='monthly'){const m=document.getElementById('plMonth').value||thisYM();const last=new Date(+m.slice(0,4),+m.slice(5),0).getDate();return{s:m+'-01',e:m+'-'+String(last).padStart(2,'0'),label:m.slice(0,4)+'년 '+m.slice(5)+'월'};}
+  if(plMode==='daily'){const d=document.getElementById('plDate').value||today();return{s:d,e:d,label:d};}
+  const s=document.getElementById('plStart').value||thisYM()+'-01';
+  const e=document.getElementById('plEnd').value||today();
+  return{s,e,label:s+' ~ '+e};
+}
+function renderPL(){
+  const{s,e,label}=getPLRange();
+  document.getElementById('plPeriodLabel').textContent=label;
+  const bk={매출액:{},매출원가:{},판관비:{},영업외수익:{},영업외비용:{},법인세:{}};
+  const sr={매출액:{},매출원가:{},판관비:{},영업외수익:{},영업외비용:{},법인세:{}};
+  function add(cat,amount,type,src){
+    const b=plCat(cat,type);
+    if(!bk[b])return;
+    const k=cat||(type==='in'?'기타수익':'기타비용');
+    bk[b][k]=(bk[b][k]||0)+amount;
+    if(!sr[b][k])sr[b][k]=new Set();
+    sr[b][k].add(src);
+  }
+  TXS.filter(t=>t.date>=s&&t.date<=e).forEach(t=>add(t.cat,t.amount,t.type,'자금일보'));
+  INVS.filter(r=>r.date>=s&&r.date<=e).forEach(r=>add(r.cat||(r.type==='out'?'상품매출':'상품매출원가'),r.total||r.supply,r.type,'세금계산서'));
+  CARDS.filter(r=>r.date>=s&&r.date<=e).forEach(r=>add(r.cat||(r.type==='in'?'소모품비':'수수료수익'),r.total||r.supply,r.type,'법인카드'));
+  RCS.filter(r=>r.date>=s&&r.date<=e).forEach(r=>add(r.cat||(r.type==='out'?'상품매출':'소모품비'),r.total||r.supply,r.type,'현금영수증'));
+  const sum=o=>Object.values(o).reduce((a,b)=>a+b,0);
+  const 매출=sum(bk.매출액),원가=sum(bk.매출원가),판관=sum(bk.판관비);
+  const 영수=sum(bk.영업외수익),영비=sum(bk.영업외비용),법세=sum(bk.법인세);
+  const 매출총=매출-원가,영업=매출총-판관,세전=영업+영수-영비,순이=세전-법세;
+  document.getElementById('plStats').innerHTML=[
+    ['매출액',fmt(매출),'cv-in'],['영업이익',(영업>=0?'+':'')+fmt(영업),영업>=0?'cv-pos':'cv-neg'],['당기순이익',(순이>=0?'+':'')+fmt(순이),순이>=0?'cv-pos':'cv-neg'],
+  ].map(([l,v,c])=>'<div class="stat-card"><div class="sc-label">'+l+'</div><div class="sc-value '+c+'">'+v+'</div></div>').join('');
+  const pct=v=>매출?(Math.abs(v/매출)*100).toFixed(1)+'%':'-';
+  const sbadge=(b,k)=>{const ss=sr[b]?.[k];return ss?[...ss].map(s=>'<span class="tag" style="font-size:10px">'+s+'</span>').join(''):'';};
+  const rows=[];
+  const sec=(title,total,bucket,isNeg,clr)=>{
+    rows.push('<tr style="background:#f8f9fa"><td colspan="4" style="padding:8px 14px;font-weight:700;font-size:13px;border-top:2px solid var(--border)">'+title+'</td></tr>');
+    Object.entries(bk[bucket]).forEach(([k,v])=>rows.push('<tr><td style="padding:7px 14px 7px 28px;font-size:13px;color:var(--muted)">'+k+'</td><td class="ra" style="color:'+(isNeg?'var(--red)':'var(--accent)')+'">'+(isNeg?'-':'+')+fmt(v)+'</td><td class="ra" style="font-size:12px;color:var(--muted)">'+pct(v)+'</td><td style="font-size:11px">'+sbadge(bucket,k)+'</td></tr>'));
+    rows.push('<tr style="border-top:1px solid var(--border)"><td style="padding:8px 14px;font-weight:600">소계</td><td class="ra" style="font-weight:700;color:'+clr+'">'+fmt(total)+'</td><td class="ra" style="color:var(--muted)">'+pct(total)+'</td><td></td></tr>');
+  };
+  const sub=(title,val,cls,big)=>rows.push('<tr style="background:'+(big?'#dbeafe':'#f0fdf4')+'"><td colspan="2" style="padding:'+(big?10:8)+'px 14px;font-size:'+(big?15:13)+'px;font-weight:700;color:'+cls+'">'+title+'<span style="margin-left:12px;font-size:'+(big?17:14)+'px">'+(val>=0?'+':'')+fmt(val)+'</span></td><td class="ra" style="font-size:12px;color:var(--muted);font-weight:600">'+pct(val)+'</td><td></td></tr>');
+  sec('Ⅰ. 매출액',매출,'매출액',false,'var(--accent)');
+  sec('Ⅱ. 매출원가',원가,'매출원가',true,'var(--red)');
+  sub('Ⅲ. 매출총이익',매출총,매출총>=0?'var(--green)':'var(--red)',false);
+  sec('Ⅳ. 판매비와관리비',판관,'판관비',true,'var(--red)');
+  sub('Ⅴ. 영업이익',영업,영업>=0?'var(--green)':'var(--red)',false);
+  sec('Ⅵ. 영업외수익',영수,'영업외수익',false,'var(--accent)');
+  sec('Ⅶ. 영업외비용',영비,'영업외비용',true,'var(--red)');
+  sub('Ⅷ. 법인세차감전순이익',세전,세전>=0?'var(--green)':'var(--red)',false);
+  sec('Ⅸ. 법인세비용',법세,'법인세',true,'var(--red)');
+  sub('Ⅹ. 당기순이익',순이,순이>=0?'var(--green)':'var(--red)',true);
+  document.getElementById('tbPL').innerHTML=rows.join('');
+}
+function exportPL(){
+  const{label}=getPLRange();
+  const rows=[['항목','금액','비고']];
+  document.querySelectorAll('#tbPL tr').forEach(tr=>{const tds=tr.querySelectorAll('td');if(tds.length>=2)rows.push([tds[0].textContent.trim(),tds[1].textContent.trim(),tds[3]?.textContent.trim()||'']);});
+  const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:30},{wch:20},{wch:20}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'손익계산서');
+  XLSX.writeFile(wb,'손익계산서_'+label.replace(/[~\s]/g,'_')+'.xlsx');
+}
+
 // ── 초기화 ────────────────────────────────────────────
 (function init(){
   const ym = thisYM();
   document.getElementById('fMonth').value = ym;
+  document.getElementById('plMonth').value = ym;
+  document.getElementById('plDate').value = today();
+  document.getElementById('plStart').value = ym+'-01';
+  document.getElementById('plEnd').value = today();
   document.getElementById('bMonth').value = ym;
   document.getElementById('fStart').value = ym+'-01';
   document.getElementById('fEnd').value = today();
@@ -1168,5 +1548,6 @@ function delTx(id) {
   document.getElementById('bEnd').addEventListener('change', renderBanks);
 })();
 </script>
+<datalist id="pl-catlist"><option value="잡손실"><option value="잡이익"><option value="여비교통비"><option value="운반비"><option value="이자수익"><option value="접대비"><option value="제품매출"><option value="복리후생비"><option value="통신비"><option value="소모품비"><option value="감가상각비"><option value="임대료"><option value="보험료"><option value="이자비용"><option value="세금과공과금"><option value="수수료비용"><option value="임차료"><option value="도서인쇄비"><option value="차량유지비"><option value="수도광열비"><option value="상품매출원가"><option value="제품매출원가"><option value="수선비"><option value="배당금수익"><option value="광고선전비"><option value="법인세비용"><option value="급여"><option value="상품매출"><option value="수수료수익"></datalist>
 </body>
 </html>
