@@ -1443,9 +1443,36 @@ function startCardEdit(id){cardEditId=id;renderCard();setTimeout(()=>document.ge
 function cancelCardEdit(){cardEditId=null;renderCard();}
 function saveCardEdit(id){const idx=CARDS.findIndex(r=>r.id===id);if(idx!==-1)CARDS[idx].cat=document.getElementById('card-cat-'+id)?.value?.trim()||'';save(SK.card,CARDS);cardEditId=null;renderCard();}
 
-// 손익계산서 계정과목 분류
-const PL_MAP={'상품매출':'매출액','제품매출':'매출액','수수료수익':'매출액','임대료':'매출액','임대료수익':'매출액','이자수익':'영업외수익','배당금수익':'영업외수익','외환차익':'영업외수익','잡이익':'영업외수익','보험금수익':'영업외수익','유형자산처분이익':'영업외수익','상품매출원가':'매출원가','제품매출원가':'매출원가','급여':'판관비','퇴직급여':'판관비','복리후생비':'판관비','여비교통비':'판관비','접대비':'판관비','통신비':'판관비','수도광열비':'판관비','세금과공과금':'판관비','감가상각비':'판관비','임차료':'판관비','수선비':'판관비','보험료':'판관비','차량유지비':'판관비','운반비':'판관비','도서인쇄비':'판관비','소모품비':'판관비','수수료비용':'판관비','광고선전비':'판관비','대손상각비':'판관비','이자비용':'영업외비용','외환차손':'영업외비용','기부금':'영업외비용','잡손실':'영업외비용','유형자산처분손실':'영업외비용','법인세비용':'법인세'};
-function plCat(cat,type){if(cat&&PL_MAP[cat])return PL_MAP[cat];return type==='in'?'매출액':'판관비';}
+// ── 손익계산서 계정과목 → 분류 매핑 ─────────────────────────
+// PDF 양식 기준 과목 분류
+const PL_MAP = {
+  // Ⅰ. 매출액
+  '상품매출':'매출액','제품매출':'매출액','수입수수료':'매출액','수수료수익':'매출액','임대료수익':'매출액',
+  // Ⅱ. 매출원가
+  '상품매출원가':'매출원가','제품매출원가':'매출원가','당기상품매입액':'매출원가',
+  // Ⅳ. 판매비와관리비 (PDF 과목명 기준)
+  '직원급여':'판관비','급여':'판관비','상여금':'판관비','상여':'판관비',
+  '퇴직급여':'판관비','복리후생비':'판관비','여비교통비':'판관비',
+  '접대비':'판관비','통신비':'판관비','수도광열비':'판관비','전력비':'판관비',
+  '세금과공과금':'판관비','감가상각비':'판관비','지급임차료':'판관비','임차료':'판관비','렌트료':'판관비',
+  '수선비':'판관비','보험료':'판관비','차량유지비':'판관비','운반비':'판관비',
+  '교육훈련비':'판관비','도서인쇄비':'판관비','소모품비':'판관비',
+  '지급수수료':'판관비','수수료비용':'판관비','보관료':'판관비',
+  '광고선전비':'판관비','대손상각비':'판관비','건물관리비':'판관비',
+  '판매수수료':'판관비','견본비':'판관비','무형고정자산상각':'판관비',
+  // Ⅵ. 영업외수익
+  '이자수익':'영업외수익','외환차익':'영업외수익','외화환산이익':'영업외수익',
+  '잡이익':'영업외수익','보험금수익':'영업외수익','유형자산처분이익':'영업외수익','투자자산처분이익':'영업외수익',
+  // Ⅶ. 영업외비용
+  '이자비용':'영업외비용','외환차손':'영업외비용','외화환산손실':'영업외비용',
+  '유형자산처분손실':'영업외비용','잡손실':'영업외비용','재해손실':'영업외비용','기부금':'영업외비용',
+  // Ⅸ. 법인세
+  '법인세비용':'법인세','법인세등':'법인세',
+};
+function plCat(cat,type){
+  if(cat&&PL_MAP[cat])return PL_MAP[cat];
+  return type==='in'?'매출액':'판관비';
+}
 
 let plMode='monthly';
 function setPLP(mode,el){
@@ -1464,51 +1491,169 @@ function getPLRange(){
   const e=document.getElementById('plEnd').value||today();
   return{s,e,label:s+' ~ '+e};
 }
+
 function renderPL(){
   const{s,e,label}=getPLRange();
   document.getElementById('plPeriodLabel').textContent=label;
-  const bk={매출액:{},매출원가:{},판관비:{},영업외수익:{},영업외비용:{},법인세:{}};
-  const sr={매출액:{},매출원가:{},판관비:{},영업외수익:{},영업외비용:{},법인세:{}};
-  function add(cat,amount,type,src){
-    const b=plCat(cat,type);
-    if(!bk[b])return;
-    const k=cat||(type==='in'?'기타수익':'기타비용');
-    bk[b][k]=(bk[b][k]||0)+amount;
-    if(!sr[b][k])sr[b][k]=new Set();
-    sr[b][k].add(src);
+
+  // 모든 소스 집계
+  const acc={}; // 계정과목 → 금액
+  const src={}; // 계정과목 → Set(출처)
+  function add(cat,amount,type,from){
+    if(!amount||amount<=0)return;
+    const k=cat||(type==='in'?'상품매출':'소모품비');
+    acc[k]=(acc[k]||0)+amount;
+    if(!src[k])src[k]=new Set();
+    src[k].add(from);
   }
   TXS.filter(t=>t.date>=s&&t.date<=e).forEach(t=>add(t.cat,t.amount,t.type,'자금일보'));
   INVS.filter(r=>r.date>=s&&r.date<=e).forEach(r=>add(r.cat||(r.type==='out'?'상품매출':'상품매출원가'),r.total||r.supply,r.type,'세금계산서'));
-  CARDS.filter(r=>r.date>=s&&r.date<=e).forEach(r=>add(r.cat||(r.type==='in'?'소모품비':'수수료수익'),r.total||r.supply,r.type,'법인카드'));
+  CARDS.filter(r=>r.date>=s&&r.date<=e).forEach(r=>add(r.cat||'지급수수료',r.total||r.supply,r.type,'법인카드'));
   RCS.filter(r=>r.date>=s&&r.date<=e).forEach(r=>add(r.cat||(r.type==='out'?'상품매출':'소모품비'),r.total||r.supply,r.type,'현금영수증'));
-  const sum=o=>Object.values(o).reduce((a,b)=>a+b,0);
-  const 매출=sum(bk.매출액),원가=sum(bk.매출원가),판관=sum(bk.판관비);
-  const 영수=sum(bk.영업외수익),영비=sum(bk.영업외비용),법세=sum(bk.법인세);
-  const 매출총=매출-원가,영업=매출총-판관,세전=영업+영수-영비,순이=세전-법세;
+
+  // 분류별 집계
+  const bySection={매출액:{},매출원가:{},판관비:{},영업외수익:{},영업외비용:{},법인세:{}};
+  Object.entries(acc).forEach(([cat,amt])=>{
+    const sec=plCat(cat,'');
+    if(bySection[sec])bySection[sec][cat]=(bySection[sec][cat]||0)+amt;
+  });
+
+  const sumSec=sec=>Object.values(bySection[sec]).reduce((a,b)=>a+b,0);
+  const 매출=sumSec('매출액'),원가=sumSec('매출원가'),판관=sumSec('판관비');
+  const 영수=sumSec('영업외수익'),영비=sumSec('영업외비용'),법세=sumSec('법인세');
+  const 매총=매출-원가, 영업=매총-판관, 세전=영업+영수-영비, 순이=세전-법세;
+
+  // 요약 카드
   document.getElementById('plStats').innerHTML=[
-    ['매출액',fmt(매출),'cv-in'],['영업이익',(영업>=0?'+':'')+fmt(영업),영업>=0?'cv-pos':'cv-neg'],['당기순이익',(순이>=0?'+':'')+fmt(순이),순이>=0?'cv-pos':'cv-neg'],
+    ['매출액',fmt(매출),'cv-in'],
+    ['매출총이익',(매총>=0?'+':'')+fmt(매총),매총>=0?'cv-pos':'cv-neg'],
+    ['영업이익',(영업>=0?'+':'')+fmt(영업),영업>=0?'cv-pos':'cv-neg'],
+    ['당기순이익',(순이>=0?'+':'')+fmt(순이),순이>=0?'cv-pos':'cv-neg'],
   ].map(([l,v,c])=>'<div class="stat-card"><div class="sc-label">'+l+'</div><div class="sc-value '+c+'">'+v+'</div></div>').join('');
-  const pct=v=>매출?(Math.abs(v/매출)*100).toFixed(1)+'%':'-';
-  const sbadge=(b,k)=>{const ss=sr[b]?.[k];return ss?[...ss].map(s=>'<span class="tag" style="font-size:10px">'+s+'</span>').join(''):'';};
+
+  const pct=v=>매출>0?(v/매출*100).toFixed(2):'0.00';
+  const fmtN=v=>v===0?'0':v.toLocaleString('ko-KR');
   const rows=[];
-  const sec=(title,total,bucket,isNeg,clr)=>{
-    rows.push('<tr style="background:#f8f9fa"><td colspan="4" style="padding:8px 14px;font-weight:700;font-size:13px;border-top:2px solid var(--border)">'+title+'</td></tr>');
-    Object.entries(bk[bucket]).forEach(([k,v])=>rows.push('<tr><td style="padding:7px 14px 7px 28px;font-size:13px;color:var(--muted)">'+k+'</td><td class="ra" style="color:'+(isNeg?'var(--red)':'var(--accent)')+'">'+(isNeg?'-':'+')+fmt(v)+'</td><td class="ra" style="font-size:12px;color:var(--muted)">'+pct(v)+'</td><td style="font-size:11px">'+sbadge(bucket,k)+'</td></tr>'));
-    rows.push('<tr style="border-top:1px solid var(--border)"><td style="padding:8px 14px;font-weight:600">소계</td><td class="ra" style="font-weight:700;color:'+clr+'">'+fmt(total)+'</td><td class="ra" style="color:var(--muted)">'+pct(total)+'</td><td></td></tr>');
-  };
-  const sub=(title,val,cls,big)=>rows.push('<tr style="background:'+(big?'#dbeafe':'#f0fdf4')+'"><td colspan="2" style="padding:'+(big?10:8)+'px 14px;font-size:'+(big?15:13)+'px;font-weight:700;color:'+cls+'">'+title+'<span style="margin-left:12px;font-size:'+(big?17:14)+'px">'+(val>=0?'+':'')+fmt(val)+'</span></td><td class="ra" style="font-size:12px;color:var(--muted);font-weight:600">'+pct(val)+'</td><td></td></tr>');
-  sec('Ⅰ. 매출액',매출,'매출액',false,'var(--accent)');
-  sec('Ⅱ. 매출원가',원가,'매출원가',true,'var(--red)');
-  sub('Ⅲ. 매출총이익',매출총,매출총>=0?'var(--green)':'var(--red)',false);
-  sec('Ⅳ. 판매비와관리비',판관,'판관비',true,'var(--red)');
-  sub('Ⅴ. 영업이익',영업,영업>=0?'var(--green)':'var(--red)',false);
-  sec('Ⅵ. 영업외수익',영수,'영업외수익',false,'var(--accent)');
-  sec('Ⅶ. 영업외비용',영비,'영업외비용',true,'var(--red)');
-  sub('Ⅷ. 법인세차감전순이익',세전,세전>=0?'var(--green)':'var(--red)',false);
-  sec('Ⅸ. 법인세비용',법세,'법인세',true,'var(--red)');
-  sub('Ⅹ. 당기순이익',순이,순이>=0?'var(--green)':'var(--red)',true);
+
+  // PDF 양식에 정의된 전체 과목 목록 (순서 그대로)
+  const STRUCTURE=[
+    {type:'section', roman:'Ⅰ', title:'매출 액', total:매출, pct:pct(매출)},
+    {type:'items', section:'매출액', list:[
+      '상품매출','제품매출','수입수수료','수수료수익','임대료수익',
+    ]},
+    {type:'subtotal', title:'Ⅱ. 매출원가', value:원가, pct:pct(원가), neg:true},
+    {type:'items', section:'매출원가', list:[
+      '상품매출원가','제품매출원가','당기상품매입액',
+    ]},
+    {type:'result', roman:'Ⅲ', title:'매출총이익', value:매총, pct:pct(매총)},
+    {type:'section', roman:'Ⅳ', title:'판 매 비 와 관 리 비', total:판관, pct:pct(판관)},
+    {type:'items', section:'판관비', list:[
+      '직원급여','급여','상여금','상여','퇴직급여','복리후생비','여비교통비',
+      '접대비','통신비','수도광열비','전력비','세금과공과금','감가상각비',
+      '지급임차료','임차료','렌트료','수선비','보험료','차량유지비','운반비',
+      '교육훈련비','도서인쇄비','소모품비','지급수수료','수수료비용','보관료',
+      '광고선전비','대손상각비','건물관리비','판매수수료','견본비','무형고정자산상각',
+    ]},
+    {type:'result', roman:'Ⅴ', title:'영 업 이 익', value:영업, pct:pct(영업)},
+    {type:'section', roman:'Ⅵ', title:'영 업 외 수 익', total:영수, pct:pct(영수)},
+    {type:'items', section:'영업외수익', list:[
+      '이자수익','외환차익','외화환산이익','잡이익','보험금수익','유형자산처분이익','투자자산처분이익',
+    ]},
+    {type:'section2', roman:'Ⅶ', title:'영 업 외 비 용', total:영비, pct:pct(영비)},
+    {type:'items', section:'영업외비용', list:[
+      '이자비용','외환차손','외화환산손실','유형자산처분손실','잡손실','재해손실','기부금',
+    ]},
+    {type:'result', roman:'Ⅷ', title:'법인세차감전이익', value:세전, pct:pct(세전)},
+    {type:'section2', roman:'Ⅸ', title:'법 인 세 등', total:법세, pct:pct(법세)},
+    {type:'items', section:'법인세', list:['법인세비용','법인세등']},
+    {type:'result-final', roman:'Ⅹ', title:'당 기 순 이 익', value:순이, pct:pct(순이)},
+  ];
+
+  // 헤더
+  rows.push('<tr style="background:#1e2128;color:#fff"><th style="padding:10px 16px;text-align:left;font-size:12px">과 목</th><th style="padding:10px 16px;text-align:right;font-size:12px;width:160px">금 액</th><th style="padding:10px 16px;text-align:right;font-size:12px;width:80px">비율(%)</th><th style="padding:10px 16px;text-align:left;font-size:12px;width:120px">출처</th></tr>');
+
+  STRUCTURE.forEach(node=>{
+    if(node.type==='section'){
+      rows.push(
+        '<tr style="background:#f0f4ff;border-top:2px solid #2563eb">'+
+        '<td style="padding:10px 16px;font-weight:700;font-size:13px;color:#1e2128">'+node.roman+'. '+node.title+'</td>'+
+        '<td style="padding:10px 16px;text-align:right;font-weight:700;font-size:14px;color:#2563eb">'+fmtN(node.total)+'</td>'+
+        '<td style="padding:10px 16px;text-align:right;font-size:12px;color:#2563eb;font-weight:600">'+node.pct+'</td>'+
+        '<td></td></tr>'
+      );
+    } else if(node.type==='section2'){
+      rows.push(
+        '<tr style="background:#fff5f5;border-top:2px solid #dc2626">'+
+        '<td style="padding:10px 16px;font-weight:700;font-size:13px;color:#1e2128">'+node.roman+'. '+node.title+'</td>'+
+        '<td style="padding:10px 16px;text-align:right;font-weight:700;font-size:14px;color:#dc2626">'+fmtN(node.total)+'</td>'+
+        '<td style="padding:10px 16px;text-align:right;font-size:12px;color:#dc2626;font-weight:600">'+node.pct+'</td>'+
+        '<td></td></tr>'
+      );
+    } else if(node.type==='subtotal'){
+      rows.push(
+        '<tr style="background:#fff5f5;border-top:2px solid #dc2626">'+
+        '<td style="padding:10px 16px;font-weight:700;font-size:13px;color:#1e2128">'+node.title+'</td>'+
+        '<td style="padding:10px 16px;text-align:right;font-weight:700;font-size:14px;color:#dc2626">'+fmtN(node.value)+'</td>'+
+        '<td style="padding:10px 16px;text-align:right;font-size:12px;color:#dc2626;font-weight:600">'+node.pct+'</td>'+
+        '<td></td></tr>'
+      );
+    } else if(node.type==='items'){
+      node.list.forEach(cat=>{
+        const amt=bySection[node.section]?.[cat]||0;
+        const srcs=src[cat];
+        const srcBadge=srcs?[...srcs].map(s=>'<span class="tag" style="font-size:10px;margin-right:2px">'+s+'</span>').join(''):'';
+        if(amt>0||true){ // 항상 표시
+          rows.push(
+            '<tr style="border-bottom:1px solid #f3f4f6"'+(amt===0?' class="pl-zero"':'')+'>'+
+            '<td style="padding:7px 16px 7px 32px;font-size:12px;color:'+(amt>0?'#374151':'#9ca3af')+'">'+cat+'</td>'+
+            '<td style="padding:7px 16px;text-align:right;font-size:13px;color:'+(amt>0?'#374151':'#9ca3af')+'">'+fmtN(amt)+'</td>'+
+            '<td style="padding:7px 16px;text-align:right;font-size:11px;color:#9ca3af">'+
+              (amt>0?'('+pct(amt)+'%)':'')+'</td>'+
+            '<td style="padding:7px 16px;font-size:11px">'+srcBadge+'</td></tr>'
+          );
+        }
+      });
+      // 해당 섹션에 있지만 목록에 없는 항목 (직접 입력한 계정과목)
+      Object.keys(bySection[node.section]||{}).forEach(cat=>{
+        if(!node.list.includes(cat)&&(bySection[node.section][cat]||0)>0){
+          const amt=bySection[node.section][cat];
+          const srcs=src[cat];
+          const srcBadge=srcs?[...srcs].map(s=>'<span class="tag" style="font-size:10px">'+s+'</span>').join(''):'';
+          rows.push(
+            '<tr style="background:#fffbeb;border-bottom:1px solid #f3f4f6">'+
+            '<td style="padding:7px 16px 7px 32px;font-size:12px;color:#d97706">'+cat+' <span style="font-size:10px">(기타)</span></td>'+
+            '<td style="padding:7px 16px;text-align:right;font-size:13px;color:#d97706">'+fmtN(amt)+'</td>'+
+            '<td style="padding:7px 16px;text-align:right;font-size:11px;color:#9ca3af">('+pct(amt)+'%)</td>'+
+            '<td style="padding:7px 16px;font-size:11px">'+srcBadge+'</td></tr>'
+          );
+        }
+      });
+    } else if(node.type==='result'){
+      const cls=node.value>=0?'color:#16a34a':'color:#dc2626';
+      rows.push(
+        '<tr style="background:#f0fdf4;border-top:2px solid #16a34a;border-bottom:2px solid #16a34a">'+
+        '<td style="padding:11px 16px;font-weight:700;font-size:14px">'+node.roman+'. '+node.title+'</td>'+
+        '<td style="padding:11px 16px;text-align:right;font-weight:700;font-size:15px;'+cls+'">'+
+          (node.value>=0?'':'-')+fmtN(node.value)+'</td>'+
+        '<td style="padding:11px 16px;text-align:right;font-size:12px;font-weight:600;'+cls+'">'+node.pct+'</td>'+
+        '<td></td></tr>'
+      );
+    } else if(node.type==='result-final'){
+      const cls=node.value>=0?'color:#16a34a':'color:#dc2626';
+      rows.push(
+        '<tr style="background:'+(node.value>=0?'#dcfce7':'#fee2e2')+';border-top:3px solid '+(node.value>=0?'#16a34a':'#dc2626')+';border-bottom:3px solid '+(node.value>=0?'#16a34a':'#dc2626')+'">'+
+        '<td style="padding:13px 16px;font-weight:700;font-size:15px">'+node.roman+'. '+node.title+'</td>'+
+        '<td style="padding:13px 16px;text-align:right;font-weight:700;font-size:17px;'+cls+'">'+
+          (node.value>=0?'':'-')+fmtN(node.value)+'</td>'+
+        '<td style="padding:13px 16px;text-align:right;font-size:13px;font-weight:700;'+cls+'">'+node.pct+'</td>'+
+        '<td></td></tr>'
+      );
+    }
+  });
+
   document.getElementById('tbPL').innerHTML=rows.join('');
 }
+
 function exportPL(){
   const{label}=getPLRange();
   const rows=[['항목','금액','비고']];
