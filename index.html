@@ -1471,6 +1471,8 @@ const PL_MAP = {
 };
 function plCat(cat,type){
   if(cat&&PL_MAP[cat])return PL_MAP[cat];
+  if(cat==='기타수익')return '영업외수익';
+  if(cat==='기타비용')return '영업외비용';
   return type==='in'?'매출액':'판관비';
 }
 
@@ -1496,11 +1498,15 @@ function renderPL(){
   const{s,e,label}=getPLRange();
   document.getElementById('plPeriodLabel').textContent=label;
 
+  // 손익계산서 제외 계정과목 (재무상태표 항목 및 자금이체)
+  const PL_EXCLUDE = new Set(['미착품','외상매출금','외상매입금','자금이체','미착상품','받을어음','지급어음','가지급금','가수금','예수금','선수금','선급금','단기차입금','장기차입금','선급비용','선수수익']);
+
   // 모든 소스 집계
   const acc={}; // 계정과목 → 금액
   const src={}; // 계정과목 → Set(출처)
   function add(cat,amount,type,from){
     if(!amount||amount<=0)return;
+    if(PL_EXCLUDE.has(cat))return; // 제외 항목 스킵
     const k=cat||(type==='in'?'상품매출':'소모품비');
     acc[k]=(acc[k]||0)+amount;
     if(!src[k])src[k]=new Set();
@@ -1557,11 +1563,11 @@ function renderPL(){
     {type:'result', roman:'Ⅴ', title:'영 업 이 익', value:영업, pct:pct(영업)},
     {type:'section', roman:'Ⅵ', title:'영 업 외 수 익', total:영수, pct:pct(영수)},
     {type:'items', section:'영업외수익', list:[
-      '이자수익','외환차익','외화환산이익','잡이익','보험금수익','유형자산처분이익','투자자산처분이익',
+      '이자수익','외환차익','외화환산이익','잡이익','보험금수익','유형자산처분이익','투자자산처분이익','기타수익',
     ]},
     {type:'section2', roman:'Ⅶ', title:'영 업 외 비 용', total:영비, pct:pct(영비)},
     {type:'items', section:'영업외비용', list:[
-      '이자비용','외환차손','외화환산손실','유형자산처분손실','잡손실','재해손실','기부금',
+      '이자비용','외환차손','외화환산손실','유형자산처분손실','잡손실','재해손실','기부금','기타비용',
     ]},
     {type:'result', roman:'Ⅷ', title:'법인세차감전이익', value:세전, pct:pct(세전)},
     {type:'section2', roman:'Ⅸ', title:'법 인 세 등', total:법세, pct:pct(법세)},
@@ -1629,23 +1635,35 @@ function renderPL(){
         }
       });
     } else if(node.type==='result'){
-      const cls=node.value>=0?'color:#16a34a':'color:#dc2626';
+      const isPos=node.value>=0;
+      const cls=isPos?'color:#16a34a':'color:#dc2626';
+      const bg=isPos?'#f0fdf4':'#fff5f5';
+      const border=isPos?'#16a34a':'#dc2626';
+      // 영업이익↔영업손실, 매출총이익↔매출총손실, 당기순이익↔당기순손실 자동 전환
+      let displayTitle=node.title;
+      const titleNoSpace=node.title.replace(/ /g,'');
+      if(titleNoSpace.includes('영업이익'))displayTitle=isPos?'영 업 이 익':'영 업 손 실';
+      if(titleNoSpace.includes('매출총이익'))displayTitle=isPos?'매 출 총 이 익':'매 출 총 손 실';
+      if(titleNoSpace.includes('법인세차감전'))displayTitle=isPos?'법인세차감전이익':'법인세차감전손실';
       rows.push(
-        '<tr style="background:#f0fdf4;border-top:2px solid #16a34a;border-bottom:2px solid #16a34a">'+
-        '<td style="padding:11px 16px;font-weight:700;font-size:14px">'+node.roman+'. '+node.title+'</td>'+
+        '<tr style="background:'+bg+';border-top:2px solid '+border+';border-bottom:2px solid '+border+'">'+
+        '<td style="padding:11px 16px;font-weight:700;font-size:14px">'+node.roman+'. '+displayTitle+'</td>'+
         '<td style="padding:11px 16px;text-align:right;font-weight:700;font-size:15px;'+cls+'">'+
-          (node.value>=0?'':'-')+fmtN(node.value)+'</td>'+
-        '<td style="padding:11px 16px;text-align:right;font-size:12px;font-weight:600;'+cls+'">'+node.pct+'</td>'+
+          (isPos?'':'-')+fmtN(Math.abs(node.value))+'</td>'+
+        '<td style="padding:11px 16px;text-align:right;font-size:12px;font-weight:600;'+cls+'">'+
+          (isPos?'':'-')+node.pct+'</td>'+
         '<td></td></tr>'
       );
     } else if(node.type==='result-final'){
-      const cls=node.value>=0?'color:#16a34a':'color:#dc2626';
+      const isPos=node.value>=0;
+      const cls=isPos?'color:#16a34a':'color:#dc2626';
+      const displayTitle=isPos?'당 기 순 이 익':'당 기 순 손 실';
       rows.push(
-        '<tr style="background:'+(node.value>=0?'#dcfce7':'#fee2e2')+';border-top:3px solid '+(node.value>=0?'#16a34a':'#dc2626')+';border-bottom:3px solid '+(node.value>=0?'#16a34a':'#dc2626')+'">'+
-        '<td style="padding:13px 16px;font-weight:700;font-size:15px">'+node.roman+'. '+node.title+'</td>'+
+        '<tr style="background:'+(isPos?'#dcfce7':'#fee2e2')+';border-top:3px solid '+(isPos?'#16a34a':'#dc2626')+';border-bottom:3px solid '+(isPos?'#16a34a':'#dc2626')+'">'+
+        '<td style="padding:13px 16px;font-weight:700;font-size:15px">'+node.roman+'. '+displayTitle+'</td>'+
         '<td style="padding:13px 16px;text-align:right;font-weight:700;font-size:17px;'+cls+'">'+
-          (node.value>=0?'':'-')+fmtN(node.value)+'</td>'+
-        '<td style="padding:13px 16px;text-align:right;font-size:13px;font-weight:700;'+cls+'">'+node.pct+'</td>'+
+          (isPos?'':'-')+fmtN(Math.abs(node.value))+'</td>'+
+        '<td style="padding:13px 16px;text-align:right;font-size:13px;font-weight:700;'+cls+'">'+(isPos?'':'-')+node.pct+'</td>'+
         '<td></td></tr>'
       );
     }
