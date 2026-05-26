@@ -275,7 +275,7 @@ tbody tr:hover td{background:var(--surface)}
       </div>
       <table><thead><tr>
         <th style="width:84px">날짜</th><th>거래처명</th>
-        <th style="width:88px">계정과목</th><th class="ra" style="width:100px">금액</th><th>주요내용</th><th style="width:44px"></th>
+        <th style="width:80px">계정과목</th><th class="ra" style="width:96px">금액</th><th style="width:80px">은행</th><th>주요내용</th><th style="width:44px"></th>
       </tr></thead><tbody id="tbIn"></tbody></table>
     </div>
     <div class="tcard">
@@ -285,7 +285,7 @@ tbody tr:hover td{background:var(--surface)}
       </div>
       <table><thead><tr>
         <th style="width:84px">날짜</th><th>거래처명</th>
-        <th style="width:88px">계정과목</th><th class="ra" style="width:100px">금액</th><th>주요내용</th><th style="width:44px"></th>
+        <th style="width:80px">계정과목</th><th class="ra" style="width:96px">금액</th><th style="width:80px">은행</th><th>주요내용</th><th style="width:44px"></th>
       </tr></thead><tbody id="tbOut"></tbody></table>
     </div>
   </div>
@@ -302,10 +302,12 @@ tbody tr:hover td{background:var(--surface)}
     <div id="bCustom" style="display:none;gap:6px;align-items:center">
       <input type="date" id="bStart"><span style="color:var(--muted);font-size:12px">~</span><input type="date" id="bEnd">
     </div>
+    <select id="bBankFilter" onchange="renderBanks()" style="min-width:130px"><option value="">전체 은행</option></select>
+    <select id="bTypeFilter" onchange="renderBanks()"><option value="">입출금 전체</option><option value="in">입금만</option><option value="out">출금만</option></select>
   </div>
   <div id="bankGrid" class="bank-grid"></div>
   <div class="tcard">
-    <div class="thead-bar"><div class="thead-title">전체 거래 내역</div></div>
+    <div class="thead-bar"><div class="thead-title" id="bankTableTitle">전체 거래 내역</div></div>
     <table><thead><tr>
       <th style="width:84px">날짜</th><th style="width:100px">은행</th>
       <th>거래처명</th><th style="width:64px">구분</th><th class="ra" style="width:110px">금액</th><th>주요내용</th>
@@ -1003,7 +1005,7 @@ function renderDash() {
         '<td style="vertical-align:middle;white-space:nowrap">' +
           '<button class="edit-btn" style="background:var(--accent);color:#fff;border-color:var(--accent)" data-id="'+t.id+'" onclick="saveEdit(this.dataset.id)">✓ 저장</button></td>' +
         '</tr>' +
-        '<tr class="ie-row"><td colspan="6" style="padding:0">' +
+        '<tr class="ie-row"><td colspan="7" style="padding:0">' +
           '<div class="ie-actions">' +
             '<span class="ie-hint">Enter 저장 · Esc 취소</span>' +
             '<button class="ie-cancel" onclick="cancelEdit()">취소</button>' +
@@ -1015,6 +1017,7 @@ function renderDash() {
       '<td style="min-width:100px">'+t.name+'</td>' +
       '<td style="min-width:80px"><span class="tag '+(type==='in'?'tag-b':'tag-r')+'">'+t.cat+'</span></td>' +
       '<td class="ra nowrap '+(type==='in'?'amt-in':'amt-out')+'" style="min-width:90px">'+fmt(t.amount)+'</td>' +
+      '<td><span class="tag" style="font-size:11px;background:#f1f5f9;color:#475569">'+t.bank+'</span></td>' +
       '<td style="color:var(--muted);font-size:12px;min-width:100px">'+t.memo+'</td>' +
       '<td class="nowrap"><button class="edit-btn" data-id="'+t.id+'" onclick="startEdit(this.dataset.id)">편집</button></td></tr>';
   };
@@ -1032,8 +1035,28 @@ function renderDash() {
 // ── 은행별 ────────────────────────────────────────────
 function renderBanks() {
   const { s, e } = getBRange();
-  const all = TXS.filter(t => t.date >= s && t.date <= e).sort((a,b) => b.date.localeCompare(a.date));
-  const banks = [...new Set(all.map(t => t.bank).filter(Boolean))].sort();
+
+  // 은행 셀렉트 갱신
+  const bfSel = document.getElementById('bBankFilter');
+  const bfVal = bfSel ? bfSel.value : '';
+  const allTx = TXS.filter(t => t.date >= s && t.date <= e);
+  const allBanks = [...new Set(allTx.map(t => t.bank).filter(Boolean))].sort();
+  if (bfSel) {
+    bfSel.innerHTML = '<option value="">전체 은행</option>' +
+      allBanks.map(b => '<option value="'+b+'"'+(bfVal===b?' selected':'')+'>'+b+'</option>').join('');
+  }
+  const typeFilter = document.getElementById('bTypeFilter')?.value || '';
+
+  // 필터 적용
+  const all = allTx
+    .filter(t => !bfVal || t.bank === bfVal)
+    .filter(t => !typeFilter || t.type === typeFilter)
+    .sort((a,b) => b.date.localeCompare(a.date));
+  const banks = bfVal ? [bfVal] : allBanks;
+
+  // 테이블 제목 업데이트
+  const ttl = document.getElementById('bankTableTitle');
+  if (ttl) ttl.textContent = (bfVal ? bfVal : '전체') + ' 거래 내역 (' + all.length + '건)';
 
   document.getElementById('bankGrid').innerHTML = banks.map(b => {
     const bt = all.filter(t => t.bank === b);
