@@ -263,7 +263,6 @@ tbody tr:hover td{background:var(--surface)}
     <div id="fCustom" style="display:none;gap:6px;align-items:center;display:none">
       <input type="date" id="fStart"><span style="color:var(--muted);font-size:12px">~</span><input type="date" id="fEnd">
     </div>
-    <select id="fBank" style="min-width:110px"><option value="">전체 은행</option></select>
     <input type="text" id="fSearch" placeholder="거래처 검색..." style="width:140px" oninput="renderDash()">
   </div>
   <div class="stat-grid" id="dashStats"></div>
@@ -959,11 +958,9 @@ function getBRange() {
 // ── 자금일보 ──────────────────────────────────────────
 function renderDash() {
   const { s, e } = getRange();
-  const bank = document.getElementById('fBank').value;
   const q = document.getElementById('fSearch').value.toLowerCase();
 
   const all = TXS.filter(t => t.date >= s && t.date <= e)
-    .filter(t => !bank || t.bank === bank)
     .filter(t => !q || (t.name + t.memo).toLowerCase().includes(q))
     .sort((a, b) => b.date.localeCompare(a.date));
 
@@ -1025,11 +1022,6 @@ function renderDash() {
   document.getElementById('tbIn').innerHTML = ins.length ? ins.map(t => makeRow(t,'in')).join('') : '<tr><td colspan="6" class="empty">입금 내역 없음</td></tr>';
   document.getElementById('tbOut').innerHTML = outs.length ? outs.map(t => makeRow(t,'out')).join('') : '<tr><td colspan="6" class="empty">출금 내역 없음</td></tr>';
 
-  // 은행 셀렉트 갱신
-  const bs = document.getElementById('fBank');
-  const pv = bs.value;
-  bs.innerHTML = '<option value="">전체 은행</option>' + [...new Set(TXS.map(t=>t.bank).filter(Boolean))].sort().map(b=>'<option value="'+b+'">'+b+'</option>').join('');
-  if (pv) bs.value = pv;
 }
 
 // ── 은행별 ────────────────────────────────────────────
@@ -1728,7 +1720,6 @@ function exportPL(){
   document.getElementById('fMonth').addEventListener('change', renderDash);
   document.getElementById('fStart').addEventListener('change', renderDash);
   document.getElementById('fEnd').addEventListener('change', renderDash);
-  document.getElementById('fBank').addEventListener('change', renderDash);
   document.getElementById('bMonth').addEventListener('change', renderBanks);
   document.getElementById('bStart').addEventListener('change', renderBanks);
   document.getElementById('bEnd').addEventListener('change', renderBanks);
