@@ -94,8 +94,9 @@ tbody td{padding:9px 14px;border-bottom:1px solid #f3f4f6;font-size:13px;word-br
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:var(--surface)}
 .ra{text-align:right}.nowrap{white-space:nowrap}
-.cb-wrap{display:flex;align-items:center;justify-content:center}
-input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--accent)}
+.cb-wrap{width:36px;padding:0!important;text-align:center;vertical-align:middle}
+input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--accent);display:block;margin:0 auto}
+thead th.cb-wrap,thead th:first-child:has(input[type=checkbox]){width:36px;padding:8px 0!important;text-align:center}
 .bulk-bar{display:none;align-items:center;gap:10px;padding:8px 14px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;margin-bottom:10px;font-size:13px}
 .bulk-bar.show{display:flex}
 .btn-del-sel{padding:5px 14px;border:1px solid #dc2626;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#dc2626;color:#fff;font-family:inherit}
@@ -286,7 +287,7 @@ input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--ac
         <div class="thead-total t-in" id="totIn">0원</div>
       </div>
       <table><thead><tr>
-        <th style="width:30px"><input type="checkbox" id="chk-all-in" data-t="in" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:84px">날짜</th><th>거래처명</th>
+        <th class="cb-wrap" style="width:36px;padding:0"><input type="checkbox" id="chk-all-in" data-t="in" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:84px">날짜</th><th>거래처명</th>
         <th style="width:80px">계정과목</th><th class="ra" style="width:96px">금액</th><th style="width:80px">은행</th><th>주요내용</th><th style="width:44px"></th>
       </tr></thead><tbody id="tbIn"></tbody></table>
     </div>
@@ -296,7 +297,7 @@ input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--ac
         <div class="thead-total t-out" id="totOut">0원</div>
       </div>
       <table><thead><tr>
-        <th style="width:30px"><input type="checkbox" id="chk-all-out" data-t="out" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:84px">날짜</th><th>거래처명</th>
+        <th class="cb-wrap" style="width:36px;padding:0"><input type="checkbox" id="chk-all-out" data-t="out" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:84px">날짜</th><th>거래처명</th>
         <th style="width:80px">계정과목</th><th class="ra" style="width:96px">금액</th><th style="width:80px">은행</th><th>주요내용</th><th style="width:44px"></th>
       </tr></thead><tbody id="tbOut"></tbody></table>
     </div>
@@ -346,7 +347,7 @@ input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--ac
   </div>
   <div class="tcard">
     <table style="table-layout:fixed"><thead><tr>
-      <th style="width:30px"><input type="checkbox" id="chk-all-inv" data-t="inv" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:90px">작성일자</th><th>거래처명</th><th style="width:110px">사업자번호</th>
+      <th class="cb-wrap" style="width:36px;padding:0"><input type="checkbox" id="chk-all-inv" data-t="inv" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:90px">작성일자</th><th>거래처명</th><th style="width:110px">사업자번호</th>
       <th>품목</th><th style="width:100px">계정과목</th>
       <th class="ra" style="width:110px">공급가액</th>
       <th class="ra" style="width:90px">세액</th><th class="ra" style="width:110px">합계</th><th style="width:80px">비고</th>
@@ -397,7 +398,7 @@ input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--ac
   </div>
   <div class="tcard">
     <table><thead><tr>
-      <th style="width:30px"><input type="checkbox" id="chk-all-rc" data-t="rc" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:84px">날짜</th><th>거래처명</th><th style="width:100px">사업자번호</th>
+      <th class="cb-wrap" style="width:36px;padding:0"><input type="checkbox" id="chk-all-rc" data-t="rc" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:84px">날짜</th><th>거래처명</th><th style="width:100px">사업자번호</th>
       <th style="width:90px">계정과목</th><th class="ra" style="width:100px">공급가액</th><th class="ra" style="width:80px">세액</th>
       <th class="ra" style="width:100px">합계</th><th>비고</th><th style="width:44px"></th>
     </tr></thead><tbody id="tbRc"></tbody></table>
@@ -1045,7 +1046,7 @@ function renderDash() {
           '</div></td></tr>';
     }
     return '<tr id="r-'+t.id+'">' +
-      '<td class="cb-wrap"><input type="checkbox" class="chk-tx chk-tx-'+type+'" data-id="'+t.id+'" data-type="tx" onclick="onCheck(this.dataset.type,this.dataset.id,this)"></td>' +
+      '<td class="cb-wrap" style="width:36px;min-width:36px;padding:4px 0"><input type="checkbox" class="chk-tx chk-tx-'+type+'" data-id="'+t.id+'" data-type="tx" onclick="onCheck(this.dataset.type,this.dataset.id,this)"></td>' +
       '<td class="nowrap" style="font-size:12px;color:var(--muted);min-width:80px">'+t.date+'</td>' +
       '<td style="min-width:100px">'+t.name+'</td>' +
       '<td style="min-width:80px"><span class="tag '+(type==='in'?'tag-b':'tag-r')+'">'+t.cat+'</span></td>' +
@@ -1141,7 +1142,7 @@ function renderInv() {
             '<span class="tag" style="flex:1">'+(r.cat||'미설정')+'</span>' +
             '<button class="edit-btn" data-id="'+r.id+'" onclick="startInvEdit(this.dataset.id)" style="font-size:10px;padding:1px 6px">편집</button>' +
           '</div></td>';
-      return '<tr><td class="cb-wrap"><input type="checkbox" class="chk-inv" data-id="'+r.id+'" data-type="inv" onclick="onCheck(this.dataset.type,this.dataset.id,this)"></td><td class="nowrap" style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
+      return '<tr><td class="cb-wrap" style="width:36px;min-width:36px;padding:4px 0"><input type="checkbox" class="chk-inv" data-id="'+r.id+'" data-type="inv" onclick="onCheck(this.dataset.type,this.dataset.id,this)"></td><td class="nowrap" style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
         '<td>'+r.partner+'</td>' +
         '<td style="font-size:11px">'+r.bizno+'</td>' +
         '<td>'+r.item+'</td>' +
@@ -1181,12 +1182,12 @@ function renderCard() {
   ].map(([l,v,c])=>'<div class="stat-card"><div class="sc-label">'+l+'</div><div class="sc-value '+c+'">'+v+'</div></div>').join('');
 
   if (cardSub === 'in') {
-    document.getElementById('cardHead').innerHTML = '<th style="width:30px"><input type="checkbox" id="chk-all-card" data-t="card" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:84px">날짜</th><th style="width:80px">카드회사</th><th style="width:60px">뒤4자리</th><th>보유자</th><th>사용자</th><th>가맹점</th><th style="width:90px">사업자번호</th><th style="width:90px">계정과목</th><th class="ra" style="width:88px">공급가액</th><th class="ra" style="width:68px">세액</th><th class="ra" style="width:88px">합계</th><th>메모</th>';
+    document.getElementById('cardHead').innerHTML = '<th class="cb-wrap" style="width:36px;padding:0"><input type="checkbox" id="chk-all-card" data-t="card" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:84px">날짜</th><th style="width:80px">카드회사</th><th style="width:60px">뒤4자리</th><th>보유자</th><th>사용자</th><th>가맹점</th><th style="width:90px">사업자번호</th><th style="width:90px">계정과목</th><th class="ra" style="width:88px">공급가액</th><th class="ra" style="width:68px">세액</th><th class="ra" style="width:88px">합계</th><th>메모</th>';
     document.getElementById('tbCard').innerHTML = rows.length ? rows.map(r => {
       const catC = cardEditId===r.id
         ? '<td style="padding:4px 8px"><div style="display:flex;gap:4px"><input id="card-cat-'+r.id+'" value="'+(r.cat||'').replace(/"/g,'&quot;')+'" list="pl-catlist" class="ie-input" style="width:100px"><button class="ie-save" onclick="saveCardEdit(this.dataset.id)" data-id="'+r.id+'" style="padding:3px 8px">✓</button><button class="ie-cancel" onclick="cancelCardEdit()" style="padding:3px 6px">✕</button></div></td>'
         : '<td><div style="display:flex;align-items:center;gap:4px"><span class="tag" style="flex:1">'+(r.cat||'미설정')+'</span><button class="edit-btn" data-id="'+r.id+'" onclick="startCardEdit(this.dataset.id)" style="font-size:10px;padding:1px 6px">편집</button></div></td>';
-      return '<tr><td class="cb-wrap"><input type="checkbox" class="chk-card" data-id="'+r.id+'" data-type="card" onclick="onCheck(this.dataset.type,this.dataset.id,this)"></td><td style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
+      return '<tr><td class="cb-wrap" style="width:36px;min-width:36px;padding:4px 0"><input type="checkbox" class="chk-card" data-id="'+r.id+'" data-type="card" onclick="onCheck(this.dataset.type,this.dataset.id,this)"></td><td style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
       '<td>'+r.company+'</td><td style="font-size:11px">'+r.cardno+'</td>' +
       '<td>'+r.holder+'</td><td>'+r.user+'</td>' +
       '<td>'+r.merchant+'</td>' +
@@ -1245,7 +1246,7 @@ function renderRc() {
             '<span class="tag" style="flex:1">'+(r.cat||'미설정')+'</span>' +
             '<button class="edit-btn" data-id="'+r.id+'" onclick="startRcEdit(this.dataset.id)" style="font-size:10px;padding:1px 6px">편집</button>' +
           '</div></td>';
-      return '<tr><td class="cb-wrap"><input type="checkbox" class="chk-rc" data-id="'+r.id+'" data-type="rc" onclick="onCheck(this.dataset.type,this.dataset.id,this)"></td><td class="nowrap" style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
+      return '<tr><td class="cb-wrap" style="width:36px;min-width:36px;padding:4px 0"><input type="checkbox" class="chk-rc" data-id="'+r.id+'" data-type="rc" onclick="onCheck(this.dataset.type,this.dataset.id,this)"></td><td class="nowrap" style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
         '<td>'+r.partner+'</td>' +
         '<td style="font-size:11px">'+r.bizno+'</td>' +
         catCell +
