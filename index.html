@@ -93,7 +93,13 @@ thead th{padding:8px 14px;text-align:left;font-size:11px;font-weight:600;color:v
 tbody td{padding:9px 14px;border-bottom:1px solid #f3f4f6;font-size:13px;word-break:break-word;vertical-align:top}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:var(--surface)}
-.ra{text-align:right}.nowrap{white-space:nowrap}.amt-in{color:var(--accent);font-weight:600}.amt-out{color:var(--red);font-weight:600}
+.ra{text-align:right}.nowrap{white-space:nowrap}
+.cb-wrap{display:flex;align-items:center;justify-content:center}
+input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--accent)}
+.bulk-bar{display:none;align-items:center;gap:10px;padding:8px 14px;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;margin-bottom:10px;font-size:13px}
+.bulk-bar.show{display:flex}
+.btn-del-sel{padding:5px 14px;border:1px solid #dc2626;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#dc2626;color:#fff;font-family:inherit}
+.btn-del-sel:hover{background:#b91c1c}.amt-in{color:var(--accent);font-weight:600}.amt-out{color:var(--red);font-weight:600}
 .tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;background:var(--surface);color:var(--muted);white-space:nowrap}
 .tag-b{background:var(--accent-bg);color:var(--accent)}.tag-r{background:var(--red-bg);color:var(--red)}
 .tag-g{background:var(--green-bg);color:var(--green)}.tag-gold{background:var(--gold-bg);color:var(--gold)}
@@ -266,6 +272,13 @@ tbody tr:hover td{background:var(--surface)}
     <input type="text" id="fSearch" placeholder="거래처 검색..." style="width:140px" oninput="renderDash()">
   </div>
   <div class="stat-grid" id="dashStats"></div>
+  <div class="bulk-bar" id="bulk-tx">
+    <span id="bulk-tx-cnt" style="font-weight:600;color:#dc2626"></span>
+    <button class="btn-del-sel" style="background:#2563eb;border-color:#2563eb" onclick="openBulkEdit('tx')">✏️ 선택 편집</button>
+    <button class="btn-del-sel" onclick="delSelected('tx')">🗑 선택 삭제</button>
+    <button class="btn-del-sel" style="background:#374151;border-color:#374151" onclick="delAll('tx')">전체 삭제</button>
+    <button onclick="clearSel('tx')" style="border:none;background:none;cursor:pointer;color:var(--muted);font-size:12px">취소</button>
+  </div>
   <div class="two-col">
     <div class="tcard">
       <div class="thead-bar">
@@ -273,7 +286,7 @@ tbody tr:hover td{background:var(--surface)}
         <div class="thead-total t-in" id="totIn">0원</div>
       </div>
       <table><thead><tr>
-        <th style="width:84px">날짜</th><th>거래처명</th>
+        <th style="width:30px"><input type="checkbox" id="chk-all-in" data-t="in" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:84px">날짜</th><th>거래처명</th>
         <th style="width:80px">계정과목</th><th class="ra" style="width:96px">금액</th><th style="width:80px">은행</th><th>주요내용</th><th style="width:44px"></th>
       </tr></thead><tbody id="tbIn"></tbody></table>
     </div>
@@ -283,7 +296,7 @@ tbody tr:hover td{background:var(--surface)}
         <div class="thead-total t-out" id="totOut">0원</div>
       </div>
       <table><thead><tr>
-        <th style="width:84px">날짜</th><th>거래처명</th>
+        <th style="width:30px"><input type="checkbox" id="chk-all-out" data-t="out" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:84px">날짜</th><th>거래처명</th>
         <th style="width:80px">계정과목</th><th class="ra" style="width:96px">금액</th><th style="width:80px">은행</th><th>주요내용</th><th style="width:44px"></th>
       </tr></thead><tbody id="tbOut"></tbody></table>
     </div>
@@ -324,9 +337,16 @@ tbody tr:hover td{background:var(--surface)}
     <label for="fi-inv" class="btn btn-sm">📂 추가 업로드</label>
   </div>
   <div class="stat-grid" id="invStats"></div>
+  <div class="bulk-bar" id="bulk-inv">
+    <span id="bulk-inv-cnt" style="font-weight:600;color:#dc2626"></span>
+    <button class="btn-del-sel" style="background:#2563eb;border-color:#2563eb" onclick="openBulkEdit('inv')">✏️ 선택 편집</button>
+    <button class="btn-del-sel" onclick="delSelected('inv')">🗑 선택 삭제</button>
+    <button class="btn-del-sel" style="background:#374151;border-color:#374151" onclick="delAll('inv')">전체 삭제</button>
+    <button onclick="clearSel('inv')" style="border:none;background:none;cursor:pointer;color:var(--muted);font-size:12px">취소</button>
+  </div>
   <div class="tcard">
     <table style="table-layout:fixed"><thead><tr>
-      <th style="width:90px">작성일자</th><th>거래처명</th><th style="width:110px">사업자번호</th>
+      <th style="width:30px"><input type="checkbox" id="chk-all-inv" data-t="inv" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:90px">작성일자</th><th>거래처명</th><th style="width:110px">사업자번호</th>
       <th>품목</th><th style="width:100px">계정과목</th>
       <th class="ra" style="width:110px">공급가액</th>
       <th class="ra" style="width:90px">세액</th><th class="ra" style="width:110px">합계</th><th style="width:80px">비고</th>
@@ -345,6 +365,13 @@ tbody tr:hover td{background:var(--surface)}
     <label for="fi-card" class="btn btn-sm">📂 추가 업로드</label>
   </div>
   <div class="stat-grid" id="cardStats"></div>
+  <div class="bulk-bar" id="bulk-card">
+    <span id="bulk-card-cnt" style="font-weight:600;color:#dc2626"></span>
+    <button class="btn-del-sel" style="background:#2563eb;border-color:#2563eb" onclick="openBulkEdit('card')">✏️ 선택 편집</button>
+    <button class="btn-del-sel" onclick="delSelected('card')">🗑 선택 삭제</button>
+    <button class="btn-del-sel" style="background:#374151;border-color:#374151" onclick="delAll('card')">전체 삭제</button>
+    <button onclick="clearSel('card')" style="border:none;background:none;cursor:pointer;color:var(--muted);font-size:12px">취소</button>
+  </div>
   <div class="tcard">
     <table><thead><tr id="cardHead"></tr></thead><tbody id="tbCard"></tbody></table>
     <div id="sumCard" style="display:none;padding:10px 16px;border-top:1px solid var(--border);background:var(--surface);font-size:13px;font-weight:600"></div>
@@ -361,9 +388,16 @@ tbody tr:hover td{background:var(--surface)}
     <label for="fi-rc" class="btn btn-sm">📂 추가 업로드</label>
   </div>
   <div class="stat-grid" id="rcStats"></div>
+  <div class="bulk-bar" id="bulk-rc">
+    <span id="bulk-rc-cnt" style="font-weight:600;color:#dc2626"></span>
+    <button class="btn-del-sel" style="background:#2563eb;border-color:#2563eb" onclick="openBulkEdit('rc')">✏️ 선택 편집</button>
+    <button class="btn-del-sel" onclick="delSelected('rc')">🗑 선택 삭제</button>
+    <button class="btn-del-sel" style="background:#374151;border-color:#374151" onclick="delAll('rc')">전체 삭제</button>
+    <button onclick="clearSel('rc')" style="border:none;background:none;cursor:pointer;color:var(--muted);font-size:12px">취소</button>
+  </div>
   <div class="tcard">
     <table><thead><tr>
-      <th style="width:84px">날짜</th><th>거래처명</th><th style="width:100px">사업자번호</th>
+      <th style="width:30px"><input type="checkbox" id="chk-all-rc" data-t="rc" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:84px">날짜</th><th>거래처명</th><th style="width:100px">사업자번호</th>
       <th style="width:90px">계정과목</th><th class="ra" style="width:100px">공급가액</th><th class="ra" style="width:80px">세액</th>
       <th class="ra" style="width:100px">합계</th><th>비고</th><th style="width:44px"></th>
     </tr></thead><tbody id="tbRc"></tbody></table>
@@ -1011,6 +1045,7 @@ function renderDash() {
           '</div></td></tr>';
     }
     return '<tr id="r-'+t.id+'">' +
+      '<td class="cb-wrap"><input type="checkbox" class="chk-tx chk-tx-'+type+'" data-id="'+t.id+'" data-type="tx" onclick="onCheck(this.dataset.type,this.dataset.id,this)"></td>' +
       '<td class="nowrap" style="font-size:12px;color:var(--muted);min-width:80px">'+t.date+'</td>' +
       '<td style="min-width:100px">'+t.name+'</td>' +
       '<td style="min-width:80px"><span class="tag '+(type==='in'?'tag-b':'tag-r')+'">'+t.cat+'</span></td>' +
@@ -1106,7 +1141,7 @@ function renderInv() {
             '<span class="tag" style="flex:1">'+(r.cat||'미설정')+'</span>' +
             '<button class="edit-btn" data-id="'+r.id+'" onclick="startInvEdit(this.dataset.id)" style="font-size:10px;padding:1px 6px">편집</button>' +
           '</div></td>';
-      return '<tr><td class="nowrap" style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
+      return '<tr><td class="cb-wrap"><input type="checkbox" class="chk-inv" data-id="'+r.id+'" data-type="inv" onclick="onCheck(this.dataset.type,this.dataset.id,this)"></td><td class="nowrap" style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
         '<td>'+r.partner+'</td>' +
         '<td style="font-size:11px">'+r.bizno+'</td>' +
         '<td>'+r.item+'</td>' +
@@ -1116,7 +1151,7 @@ function renderInv() {
         '<td class="ra nowrap" style="font-weight:600">'+fmt(r.total)+'</td>' +
         '<td style="color:var(--muted);font-size:12px">'+r.memo+'</td></tr>';
     })()
-  ).join('') : '<tr><td colspan="8" class="empty">내역 없음</td></tr>';
+  ).join('') : '<tr><td colspan="9" class="empty">내역 없음</td></tr>';
 
   const si = document.getElementById('sumInv');
   if (rows.length) {
@@ -1146,12 +1181,12 @@ function renderCard() {
   ].map(([l,v,c])=>'<div class="stat-card"><div class="sc-label">'+l+'</div><div class="sc-value '+c+'">'+v+'</div></div>').join('');
 
   if (cardSub === 'in') {
-    document.getElementById('cardHead').innerHTML = '<th style="width:84px">날짜</th><th style="width:80px">카드회사</th><th style="width:60px">뒤4자리</th><th>보유자</th><th>사용자</th><th>가맹점</th><th style="width:90px">사업자번호</th><th style="width:90px">계정과목</th><th class="ra" style="width:88px">공급가액</th><th class="ra" style="width:68px">세액</th><th class="ra" style="width:88px">합계</th><th>메모</th>';
+    document.getElementById('cardHead').innerHTML = '<th style="width:30px"><input type="checkbox" id="chk-all-card" data-t="card" onclick="toggleAll(this.dataset.t,this)"></th><th style="width:84px">날짜</th><th style="width:80px">카드회사</th><th style="width:60px">뒤4자리</th><th>보유자</th><th>사용자</th><th>가맹점</th><th style="width:90px">사업자번호</th><th style="width:90px">계정과목</th><th class="ra" style="width:88px">공급가액</th><th class="ra" style="width:68px">세액</th><th class="ra" style="width:88px">합계</th><th>메모</th>';
     document.getElementById('tbCard').innerHTML = rows.length ? rows.map(r => {
       const catC = cardEditId===r.id
         ? '<td style="padding:4px 8px"><div style="display:flex;gap:4px"><input id="card-cat-'+r.id+'" value="'+(r.cat||'').replace(/"/g,'&quot;')+'" list="pl-catlist" class="ie-input" style="width:100px"><button class="ie-save" onclick="saveCardEdit(this.dataset.id)" data-id="'+r.id+'" style="padding:3px 8px">✓</button><button class="ie-cancel" onclick="cancelCardEdit()" style="padding:3px 6px">✕</button></div></td>'
         : '<td><div style="display:flex;align-items:center;gap:4px"><span class="tag" style="flex:1">'+(r.cat||'미설정')+'</span><button class="edit-btn" data-id="'+r.id+'" onclick="startCardEdit(this.dataset.id)" style="font-size:10px;padding:1px 6px">편집</button></div></td>';
-      return '<tr><td style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
+      return '<tr><td class="cb-wrap"><input type="checkbox" class="chk-card" data-id="'+r.id+'" data-type="card" onclick="onCheck(this.dataset.type,this.dataset.id,this)"></td><td style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
       '<td>'+r.company+'</td><td style="font-size:11px">'+r.cardno+'</td>' +
       '<td>'+r.holder+'</td><td>'+r.user+'</td>' +
       '<td>'+r.merchant+'</td>' +
@@ -1161,7 +1196,7 @@ function renderCard() {
       '<td class="ra nowrap" style="color:var(--gold)">'+fmt(r.tax)+'</td>' +
       '<td class="ra nowrap" style="font-weight:600">'+fmt(r.total)+'</td>' +
       '<td style="color:var(--muted);font-size:12px">'+r.memo+'</td></tr>';
-    }).join('') : '<tr><td colspan="12" class="empty">내역 없음</td></tr>';
+    }).join('') : '<tr><td colspan="13" class="empty">내역 없음</td></tr>';
   } else {
     document.getElementById('cardHead').innerHTML = '<th style="width:84px">날짜</th><th>가맹점/거래처</th><th style="width:100px">사업자번호</th><th class="ra" style="width:100px">공급가액</th><th class="ra" style="width:80px">세액</th><th class="ra" style="width:100px">합계</th><th>메모</th>';
     document.getElementById('tbCard').innerHTML = rows.length ? rows.map(r =>
@@ -1172,7 +1207,7 @@ function renderCard() {
       '<td class="ra" style="color:var(--gold)">'+fmt(r.tax)+'</td>' +
       '<td class="ra" style="font-weight:600">'+fmt(r.total)+'</td>' +
       '<td style="color:var(--muted);font-size:12px">'+r.memo+'</td></tr>'
-    ).join('') : '<tr><td colspan="7" class="empty">내역 없음</td></tr>';
+    ).join('') : '<tr><td colspan="8" class="empty">내역 없음</td></tr>';
   }
   document.getElementById('sumCard').style.display = rows.length ? '' : 'none';
   document.getElementById('sumCard').textContent = rows.length+'건 | 공급가액 '+fmt(sup)+' | 세액 '+fmt(tax)+' | 합계 '+fmt(tot);
@@ -1210,7 +1245,7 @@ function renderRc() {
             '<span class="tag" style="flex:1">'+(r.cat||'미설정')+'</span>' +
             '<button class="edit-btn" data-id="'+r.id+'" onclick="startRcEdit(this.dataset.id)" style="font-size:10px;padding:1px 6px">편집</button>' +
           '</div></td>';
-      return '<tr><td class="nowrap" style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
+      return '<tr><td class="cb-wrap"><input type="checkbox" class="chk-rc" data-id="'+r.id+'" data-type="rc" onclick="onCheck(this.dataset.type,this.dataset.id,this)"></td><td class="nowrap" style="font-size:12px;color:var(--muted)">'+r.date+'</td>' +
         '<td>'+r.partner+'</td>' +
         '<td style="font-size:11px">'+r.bizno+'</td>' +
         catCell +
@@ -1219,7 +1254,7 @@ function renderRc() {
         '<td class="ra nowrap" style="font-weight:600">'+fmt(r.total)+'</td>' +
         '<td style="color:var(--muted);font-size:12px">'+r.memo+'</td></tr>';
     })()
-  ).join('') : '<tr><td colspan="7" class="empty">내역 없음</td></tr>';
+  ).join('') : '<tr><td colspan="8" class="empty">내역 없음</td></tr>';
 }
 
 // ── 월별분석 차트 ─────────────────────────────────────
@@ -1515,7 +1550,7 @@ function renderPL(){
   document.getElementById('plPeriodLabel').textContent=label;
 
   // 손익계산서 제외 계정과목 (재무상태표 항목 및 자금이체)
-  const PL_EXCLUDE = new Set(['미착품','외상매출금','외상매입금','자금이체','미착상품','받을어음','지급어음','가지급금','가수금','예수금','선수금','선급금','단기차입금','장기차입금','선급비용','선수수익']);
+  const PL_EXCLUDE = new Set(['미착품','외상매출금','외상매입금','자금이체','미착상품','받을어음','지급어음','가지급금','가수금','예수금','선수금','선급금','단기차입금','장기차입금','선급비용','선수수익','임차보증금']);
 
   // 모든 소스 집계
   const acc={}; // 계정과목 → 금액
@@ -1697,6 +1732,169 @@ function exportPL(){
   XLSX.writeFile(wb,'손익계산서_'+label.replace(/[~\s]/g,'_')+'.xlsx');
 }
 
+// ── 일괄 편집 ─────────────────────────────────────────────────
+let bulkEditType = null;
+
+function openBulkEdit(type) {
+  const n = SEL[type].size;
+  if (!n) { alert('먼저 편집할 항목을 선택해주세요.'); return; }
+  bulkEditType = type;
+  const labels = { tx:'자금일보', inv:'세금계산서', card:'법인카드', rc:'현금영수증' };
+  document.getElementById('bulkEditInfo').innerHTML =
+    '<strong>' + labels[type] + '</strong> 에서 선택한 <strong style="color:var(--accent)">' + n + '건</strong>을 일괄 수정합니다.<br>' +
+    '<span style="font-size:11px">빈 칸으로 두면 해당 항목은 변경되지 않아요.</span>';
+  // tx만 거래처/메모 편집 가능
+  document.getElementById('be-tx-extra').style.display = type === 'tx' ? '' : 'none';
+  // 입력 초기화
+  document.getElementById('be-cat').value = '';
+  if (type === 'tx') {
+    document.getElementById('be-name').value = '';
+    document.getElementById('be-memo').value = '';
+  }
+  document.getElementById('bulkEditModal').classList.add('open');
+  setTimeout(() => document.getElementById('be-cat').focus(), 100);
+}
+
+function closeBulkEdit() {
+  document.getElementById('bulkEditModal').classList.remove('open');
+  bulkEditType = null;
+}
+
+function applyBulkEdit() {
+  const type = bulkEditType;
+  if (!type) return;
+  const cat  = document.getElementById('be-cat').value.trim();
+  const name = document.getElementById('be-name')?.value.trim() || '';
+  const memo = document.getElementById('be-memo')?.value.trim() || '';
+
+  if (!cat && !name && !memo) { alert('변경할 내용을 하나 이상 입력해주세요.'); return; }
+
+  const ids = SEL[type];
+  let updated = 0;
+
+  if (type === 'tx') {
+    TXS.forEach(t => {
+      if (!ids.has(t.id)) return;
+      if (cat)  t.cat  = cat;
+      if (name) t.name = name;
+      if (memo) t.memo = memo;
+      updated++;
+    });
+    save(SK.tx, TXS);
+  } else if (type === 'inv') {
+    INVS.forEach(r => { if (!ids.has(r.id)) return; if (cat) r.cat = cat; updated++; });
+    save(SK.inv, INVS);
+  } else if (type === 'card') {
+    CARDS.forEach(r => { if (!ids.has(r.id)) return; if (cat) r.cat = cat; updated++; });
+    save(SK.card, CARDS);
+  } else if (type === 'rc') {
+    RCS.forEach(r => { if (!ids.has(r.id)) return; if (cat) r.cat = cat; updated++; });
+    save(SK.rc, RCS);
+  }
+
+  closeBulkEdit();
+  clearSel(type);
+  alert('✅ ' + updated + '건이 수정됐습니다.');
+  if (type === 'tx')   renderDash();
+  if (type === 'inv')  renderInv();
+  if (type === 'card') renderCard();
+  if (type === 'rc')   renderRc();
+}
+
+// ── 체크박스 선택 / 일괄 삭제 ────────────────────────────────
+const SEL = { tx: new Set(), inv: new Set(), card: new Set(), rc: new Set() };
+
+function updateBulkBar(type) {
+  const bar = document.getElementById('bulk-' + type);
+  const cnt = document.getElementById('bulk-' + type + '-cnt');
+  const n = SEL[type].size;
+  if (bar) { bar.classList.toggle('show', n > 0); }
+  if (cnt) cnt.textContent = n + '건 선택됨';
+}
+
+function onCheck(type, id, el) {
+  if (el.checked) SEL[type].add(id);
+  else SEL[type].delete(id);
+  // 전체선택 체크박스 상태 동기화
+  const allChk = document.getElementById('chk-all-' + type);
+  if (allChk) {
+    const allBoxes = document.querySelectorAll('.chk-' + type);
+    allChk.checked = allBoxes.length > 0 && [...allBoxes].every(b => b.checked);
+    allChk.indeterminate = SEL[type].size > 0 && !allChk.checked;
+  }
+  // 입금/출금 전체선택도 동기화
+  ['in','out'].forEach(side => {
+    const sc = document.getElementById('chk-all-' + side);
+    if (sc) {
+      const boxes = document.querySelectorAll('.chk-tx-' + side);
+      sc.checked = boxes.length > 0 && [...boxes].every(b => b.checked);
+      sc.indeterminate = [...boxes].some(b => b.checked) && !sc.checked;
+    }
+  });
+  updateBulkBar(type);
+}
+
+function toggleAll(type, el) {
+  const checked = el.checked;
+  // type이 'in' 또는 'out'이면 자금일보 입/출금 구분
+  if (type === 'in' || type === 'out') {
+    document.querySelectorAll('.chk-tx-' + type).forEach(b => {
+      b.checked = checked;
+      if (checked) SEL.tx.add(b.dataset.id);
+      else SEL.tx.delete(b.dataset.id);
+    });
+    updateBulkBar('tx');
+  } else {
+    document.querySelectorAll('.chk-' + type).forEach(b => {
+      b.checked = checked;
+      if (checked) SEL[type].add(b.dataset.id);
+      else SEL[type].delete(b.dataset.id);
+    });
+    updateBulkBar(type);
+  }
+}
+
+function clearSel(type) {
+  SEL[type].clear();
+  document.querySelectorAll('.chk-' + type + ',.chk-tx-in,.chk-tx-out').forEach(b => b.checked = false);
+  ['chk-all-in','chk-all-out','chk-all-' + type].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.checked = false; el.indeterminate = false; }
+  });
+  updateBulkBar(type);
+}
+
+function delSelected(type) {
+  const ids = SEL[type];
+  if (!ids.size) return;
+  if (!confirm(ids.size + '건을 삭제할까요?')) return;
+  if (type === 'tx')   { TXS   = TXS.filter(t => !ids.has(t.id));   save(SK.tx, TXS);   }
+  if (type === 'inv')  { INVS  = INVS.filter(r => !ids.has(r.id));  save(SK.inv, INVS);  }
+  if (type === 'card') { CARDS = CARDS.filter(r => !ids.has(r.id)); save(SK.card, CARDS); }
+  if (type === 'rc')   { RCS   = RCS.filter(r => !ids.has(r.id));   save(SK.rc, RCS);    }
+  SEL[type].clear();
+  updateBulkBar(type);
+  if (type === 'tx')   renderDash();
+  if (type === 'inv')  renderInv();
+  if (type === 'card') renderCard();
+  if (type === 'rc')   renderRc();
+}
+
+function delAll(type) {
+  const labels = { tx:'자금일보 거래내역', inv:'세금계산서', card:'법인카드', rc:'현금영수증' };
+  if (!confirm(labels[type] + ' 전체 데이터를 삭제할까요?\n이 작업은 되돌릴 수 없어요.')) return;
+  if (type === 'tx')   { TXS = [];   save(SK.tx, TXS);   }
+  if (type === 'inv')  { INVS = [];  save(SK.inv, INVS);  }
+  if (type === 'card') { CARDS = []; save(SK.card, CARDS); }
+  if (type === 'rc')   { RCS = [];   save(SK.rc, RCS);    }
+  SEL[type].clear();
+  updateBulkBar(type);
+  if (type === 'tx')   renderDash();
+  if (type === 'inv')  renderInv();
+  if (type === 'card') renderCard();
+  if (type === 'rc')   renderRc();
+}
+
 // ── 초기화 ────────────────────────────────────────────
 (function init(){
   const ym = thisYM();
@@ -1727,5 +1925,38 @@ function exportPL(){
 })();
 </script>
 <datalist id="pl-catlist"><option value="잡손실"><option value="잡이익"><option value="여비교통비"><option value="운반비"><option value="이자수익"><option value="접대비"><option value="제품매출"><option value="복리후생비"><option value="통신비"><option value="소모품비"><option value="감가상각비"><option value="임대료"><option value="보험료"><option value="이자비용"><option value="세금과공과금"><option value="수수료비용"><option value="임차료"><option value="도서인쇄비"><option value="차량유지비"><option value="수도광열비"><option value="상품매출원가"><option value="제품매출원가"><option value="수선비"><option value="배당금수익"><option value="광고선전비"><option value="법인세비용"><option value="급여"><option value="상품매출"><option value="수수료수익"></datalist>
+
+<!-- 일괄 편집 모달 -->
+<div class="modal-bg" id="bulkEditModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head">
+      <h2>✏️ 선택 항목 일괄 편집</h2>
+      <button class="modal-close" onclick="closeBulkEdit()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="bulkEditInfo" style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px 14px;background:var(--accent-bg);border-radius:8px"></div>
+
+      <div class="fr">
+        <label>계정과목 변경 <span style="font-size:10px;color:var(--muted)">(비워두면 변경 안 함)</span></label>
+        <input id="be-cat" list="pl-catlist" placeholder="계정과목 선택 또는 입력..." class="map-sel">
+      </div>
+      <div id="be-tx-extra" style="display:none">
+        <div class="fr" style="margin-top:12px">
+          <label>거래처명 변경 <span style="font-size:10px;color:var(--muted)">(비워두면 변경 안 함)</span></label>
+          <input id="be-name" placeholder="거래처명..." class="map-sel">
+        </div>
+        <div class="fr" style="margin-top:12px">
+          <label>주요내용 변경 <span style="font-size:10px;color:var(--muted)">(비워두면 변경 안 함)</span></label>
+          <input id="be-memo" placeholder="주요내용..." class="map-sel">
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeBulkEdit()">취소</button>
+      <button class="btn btn-p" onclick="applyBulkEdit()">✅ 선택 항목에 적용</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
