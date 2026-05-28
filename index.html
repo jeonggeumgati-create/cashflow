@@ -271,7 +271,9 @@ thead th.cb-wrap,thead th:first-child:has(input[type=checkbox]){width:36px;paddi
       <input type="date" id="fStart"><span style="color:var(--muted);font-size:12px">~</span><input type="date" id="fEnd">
     </div>
     <select id="fBank" style="min-width:120px" onchange="renderDash()"><option value="">전체 은행</option></select>
+    <select id="fCat" style="min-width:130px" onchange="renderDash()"><option value="">전체 계정과목</option></select>
     <input type="text" id="fSearch" placeholder="거래처 검색..." style="width:140px" oninput="renderDash()">
+    <button class="btn btn-sm" onclick="exportExcel('dash')" style="margin-left:auto">📥 엑셀 다운로드</button>
   </div>
   <div class="stat-grid" id="dashStats"></div>
   <div class="bulk-bar" id="bulk-tx">
@@ -338,6 +340,11 @@ thead th.cb-wrap,thead th:first-child:has(input[type=checkbox]){width:36px;paddi
     </div>
     <label for="fi-inv" class="btn btn-sm">📂 추가 업로드</label>
   </div>
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <select id="invCat" style="height:32px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff;outline:none;min-width:150px" onchange="renderInv()"><option value="">전체 계정과목</option></select>
+    <input type="text" id="invSearch" placeholder="거래처 검색..." style="height:32px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:140px;outline:none" oninput="renderInv()">
+    <button class="btn btn-sm" onclick="exportExcel('inv')" style="margin-left:auto">📥 엑셀 다운로드</button>
+  </div>
   <div class="stat-grid" id="invStats"></div>
   <div class="bulk-bar" id="bulk-inv">
     <span id="bulk-inv-cnt" style="font-weight:600;color:#dc2626"></span>
@@ -366,6 +373,11 @@ thead th.cb-wrap,thead th:first-child:has(input[type=checkbox]){width:36px;paddi
     </div>
     <label for="fi-card" class="btn btn-sm">📂 추가 업로드</label>
   </div>
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <select id="cardCat" style="height:32px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff;outline:none;min-width:150px" onchange="renderCard()"><option value="">전체 계정과목</option></select>
+    <input type="text" id="cardSearch" placeholder="가맹점 검색..." style="height:32px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:140px;outline:none" oninput="renderCard()">
+    <button class="btn btn-sm" onclick="exportExcel('card')" style="margin-left:auto">📥 엑셀 다운로드</button>
+  </div>
   <div class="stat-grid" id="cardStats"></div>
   <div class="bulk-bar" id="bulk-card">
     <span id="bulk-card-cnt" style="font-weight:600;color:#dc2626"></span>
@@ -388,6 +400,11 @@ thead th.cb-wrap,thead th:first-child:has(input[type=checkbox]){width:36px;paddi
       <button class="sub-tab" id="rc-s-in" onclick="setRcSub('in',this)">📥 매입(수취)</button>
     </div>
     <label for="fi-rc" class="btn btn-sm">📂 추가 업로드</label>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <select id="rcCat" style="height:32px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff;outline:none;min-width:150px" onchange="renderRc()"><option value="">전체 계정과목</option></select>
+    <input type="text" id="rcSearch" placeholder="거래처 검색..." style="height:32px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;width:140px;outline:none" oninput="renderRc()">
+    <button class="btn btn-sm" onclick="exportExcel('rc')" style="margin-left:auto">📥 엑셀 다운로드</button>
   </div>
   <div class="stat-grid" id="rcStats"></div>
   <div class="bulk-bar" id="bulk-rc">
@@ -822,6 +839,7 @@ function parseTx(rows, m, fname) {
     if (outAmt) addRow(outAmt, 'out');
   });
   save(SK.tx, TXS);
+  refreshBankSelects();
   return n;
 }
 
@@ -935,6 +953,27 @@ function addFileItem(type, fname, n) {
   });
 });
 
+// ── 은행명 셀렉트 공통 갱신 ─────────────────────────────────
+function refreshBankSelects() {
+  const banks = [...new Set(TXS.map(t => t.bank).filter(Boolean))].sort();
+  ['fBank','bBankFilter'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const v = el.value;
+    el.innerHTML = '<option value="">전체 은행</option>' +
+      banks.map(b => '<option value="'+b+'"'+(v===b?' selected':'')+'>'+b+'</option>').join('');
+  });
+}
+
+function refreshCatSelect(selId, data, catFn) {
+  const el = document.getElementById(selId);
+  if (!el) return;
+  const v = el.value;
+  const cats = [...new Set(data.map(catFn).filter(Boolean))].sort();
+  el.innerHTML = '<option value="">전체 계정과목</option>' +
+    cats.map(c => '<option value="'+c+'"'+(v===c?' selected':'')+'>'+c+'</option>').join('');
+}
+
 // ── 페이지 전환 ───────────────────────────────────────
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -996,10 +1035,12 @@ function getBRange() {
 function renderDash() {
   const { s, e } = getRange();
   const bank = document.getElementById('fBank').value;
+  const fcat = document.getElementById('fCat').value;
   const q = document.getElementById('fSearch').value.toLowerCase();
 
   const all = TXS.filter(t => t.date >= s && t.date <= e)
     .filter(t => !bank || t.bank === bank)
+    .filter(t => !fcat || t.cat === fcat)
     .filter(t => !q || (t.name + t.memo).toLowerCase().includes(q))
     .sort((a, b) => b.date.localeCompare(a.date));
 
@@ -1019,14 +1060,8 @@ function renderDash() {
   document.getElementById('totIn').textContent = fmt(tIn);
   document.getElementById('totOut').textContent = fmt(tOut);
 
-  // 은행 셀렉트 갱신
-  const bs = document.getElementById('fBank');
-  const bv = bs ? bs.value : '';
-  if (bs) {
-    bs.innerHTML = '<option value="">전체 은행</option>' +
-      [...new Set(TXS.map(t=>t.bank).filter(Boolean))].sort()
-        .map(b => '<option value="'+b+'"'+(bv===b?' selected':'')+'>'+b+'</option>').join('');
-  }
+  refreshBankSelects();
+  refreshCatSelect('fCat', TXS.filter(t => { const {s,e} = getRange(); return t.date>=s && t.date<=e; }), t => t.cat);
 
   // 계정과목 목록 (자동완성용)
   const catList = [...new Set(TXS.map(t=>t.cat).filter(Boolean))].sort();
@@ -1077,15 +1112,11 @@ function renderDash() {
 function renderBanks() {
   const { s, e } = getBRange();
 
-  // 은행 셀렉트 갱신
+  refreshBankSelects();
   const bfSel = document.getElementById('bBankFilter');
   const bfVal = bfSel ? bfSel.value : '';
   const allTx = TXS.filter(t => t.date >= s && t.date <= e);
-  const allBanks = [...new Set(allTx.map(t => t.bank).filter(Boolean))].sort();
-  if (bfSel) {
-    bfSel.innerHTML = '<option value="">전체 은행</option>' +
-      allBanks.map(b => '<option value="'+b+'"'+(bfVal===b?' selected':'')+'>'+b+'</option>').join('');
-  }
+  const allBanks = bfVal ? [bfVal] : [...new Set(allTx.map(t => t.bank).filter(Boolean))].sort();
   const typeFilter = document.getElementById('bTypeFilter')?.value || '';
 
   // 필터 적용
@@ -1131,7 +1162,13 @@ function setInvSub(t, el) {
   renderInv();
 }
 function renderInv() {
-  const rows = INVS.filter(r => r.type === invSub).sort((a,b) => b.date.localeCompare(a.date));
+  const invCatVal = document.getElementById('invCat')?.value || '';
+  const invSearchVal = (document.getElementById('invSearch')?.value || '').toLowerCase();
+  refreshCatSelect('invCat', INVS.filter(r => r.type === invSub), r => r.cat);
+  const rows = INVS.filter(r => r.type === invSub)
+    .filter(r => !invCatVal || r.cat === invCatVal)
+    .filter(r => !invSearchVal || (r.partner+r.item+r.memo).toLowerCase().includes(invSearchVal))
+    .sort((a,b) => b.date.localeCompare(a.date));
   const sup = rows.reduce((s,r) => s+(r.supply||0), 0);
   const tax = rows.reduce((s,r) => s+(r.tax||0), 0);
   const tot = rows.reduce((s,r) => s+(r.total||0), 0);
@@ -1182,7 +1219,13 @@ function setCardSub(t, el) {
   renderCard();
 }
 function renderCard() {
-  const rows = CARDS.filter(r => r.type === cardSub).sort((a,b) => b.date.localeCompare(a.date));
+  const cardCatVal = document.getElementById('cardCat')?.value || '';
+  const cardSearchVal = (document.getElementById('cardSearch')?.value || '').toLowerCase();
+  refreshCatSelect('cardCat', CARDS.filter(r => r.type === cardSub), r => r.cat);
+  const rows = CARDS.filter(r => r.type === cardSub)
+    .filter(r => !cardCatVal || r.cat === cardCatVal)
+    .filter(r => !cardSearchVal || (r.merchant+r.memo).toLowerCase().includes(cardSearchVal))
+    .sort((a,b) => b.date.localeCompare(a.date));
   const sup = rows.reduce((s,r) => s+(r.supply||0), 0);
   const tax = rows.reduce((s,r) => s+(r.tax||0), 0);
   const tot = rows.reduce((s,r) => s+(r.total||0), 0);
@@ -1235,7 +1278,13 @@ function setRcSub(t, el) {
   renderRc();
 }
 function renderRc() {
-  const rows = RCS.filter(r => r.type === rcSub).sort((a,b) => b.date.localeCompare(a.date));
+  const rcCatVal = document.getElementById('rcCat')?.value || '';
+  const rcSearchVal = (document.getElementById('rcSearch')?.value || '').toLowerCase();
+  refreshCatSelect('rcCat', RCS.filter(r => r.type === rcSub), r => r.cat);
+  const rows = RCS.filter(r => r.type === rcSub)
+    .filter(r => !rcCatVal || r.cat === rcCatVal)
+    .filter(r => !rcSearchVal || (r.partner+r.memo).toLowerCase().includes(rcSearchVal))
+    .sort((a,b) => b.date.localeCompare(a.date));
   const sup = rows.reduce((s,r) => s+(r.supply||0), 0);
   const tax = rows.reduce((s,r) => s+(r.tax||0), 0);
   const tot = rows.reduce((s,r) => s+(r.total||0), 0);
@@ -1757,6 +1806,78 @@ document.addEventListener('keydown', function(e) {
   cb.dispatchEvent(new Event('click', { bubbles: true }));
 });
 
+// ── 엑셀 다운로드 (화면 그대로) ──────────────────────────────
+function exportExcel(type) {
+  const d = new Date(), ym = d.getFullYear() + ('0'+(d.getMonth()+1)).slice(-2);
+  const wb = XLSX.utils.book_new();
+
+  if (type === 'dash') {
+    const tIn  = document.querySelector('#tbIn')?.closest('table');
+    const tOut = document.querySelector('#tbOut')?.closest('table');
+    if (tIn)  XLSX.utils.book_append_sheet(wb, tableToSheet(tIn),  '입금내역');
+    if (tOut) XLSX.utils.book_append_sheet(wb, tableToSheet(tOut), '출금내역');
+    addSummarySheet(wb, 'dashStats', '요약');
+    XLSX.writeFile(wb, '자금일보_' + ym + '.xlsx');
+  } else if (type === 'inv') {
+    const tbl = document.querySelector('#tbInv')?.closest('table');
+    if (!tbl) { alert('데이터가 없어요.'); return; }
+    const sub = invSub === 'out' ? '매출' : '매입';
+    XLSX.utils.book_append_sheet(wb, tableToSheet(tbl), '세금계산서_'+sub);
+    addSummarySheet(wb, 'invStats', '요약');
+    XLSX.writeFile(wb, '세금계산서_'+sub+'_'+ym+'.xlsx');
+  } else if (type === 'card') {
+    const tbl = document.querySelector('#tbCard')?.closest('table');
+    if (!tbl) { alert('데이터가 없어요.'); return; }
+    const sub = cardSub === 'in' ? '매입' : '매출';
+    XLSX.utils.book_append_sheet(wb, tableToSheet(tbl), '법인카드_'+sub);
+    addSummarySheet(wb, 'cardStats', '요약');
+    XLSX.writeFile(wb, '법인카드_'+sub+'_'+ym+'.xlsx');
+  } else if (type === 'rc') {
+    const tbl = document.querySelector('#tbRc')?.closest('table');
+    if (!tbl) { alert('데이터가 없어요.'); return; }
+    const sub = rcSub === 'out' ? '매출' : '매입';
+    XLSX.utils.book_append_sheet(wb, tableToSheet(tbl), '현금영수증_'+sub);
+    addSummarySheet(wb, 'rcStats', '요약');
+    XLSX.writeFile(wb, '현금영수증_'+sub+'_'+ym+'.xlsx');
+  }
+}
+
+// 화면 테이블 → 워크시트 (체크박스·버튼 열 제외)
+function tableToSheet(tbl) {
+  const rows = [];
+  tbl.querySelectorAll('tr').forEach(tr => {
+    const row = [];
+    tr.querySelectorAll('th, td').forEach(cell => {
+      if (cell.classList.contains('cb-wrap')) return;
+      if (cell.querySelector('.edit-btn, .ie-save, .ie-input, .ie-cancel, .ie-del')) return;
+      const text = cell.textContent.trim().replace(/\s+/g,' ');
+      const num = text.replace(/,/g,'').replace('원','').trim();
+      row.push(!isNaN(num) && num !== '' ? Number(num) : text);
+    });
+    if (row.some(v => v !== '')) rows.push(row);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  if (rows[0]) {
+    ws['!cols'] = rows[0].map((_, ci) => ({
+      wch: Math.min(40, Math.max(8, ...rows.map(r => String(r[ci]||'').length)))
+    }));
+  }
+  return ws;
+}
+
+function addSummarySheet(wb, statsId, sheetName) {
+  const stats = document.getElementById(statsId);
+  if (!stats) return;
+  const data = [['항목','금액']];
+  stats.querySelectorAll('.stat-card').forEach(card => {
+    data.push([
+      card.querySelector('.sc-label')?.textContent.trim() || '',
+      card.querySelector('.sc-value')?.textContent.trim() || '',
+    ]);
+  });
+  if (data.length > 1) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), sheetName);
+}
+
 // ── 거래 분할 ─────────────────────────────────────────────────
 let splitTxId = null;
 
@@ -2050,6 +2171,7 @@ function delAll(type) {
   document.getElementById('fEnd').value = today();
   document.getElementById('bStart').value = ym+'-01';
   document.getElementById('bEnd').value = today();
+  refreshBankSelects();
 
   // 연도 셀렉트
   const yr = document.getElementById('chartYear');
